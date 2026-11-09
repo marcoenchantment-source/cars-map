@@ -1,0 +1,121 @@
+/* social module: hazard report grid & markers, Crew sheet, chat thread, friend markers */
+
+/* ---------------------------------------------------------------- hazard report grid */
+.hz-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.hz-tile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  min-height: 104px; padding: 12px 8px; border: 0; border-radius: var(--r-lg);
+  background: var(--surface-2); color: var(--ink); cursor: pointer;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  font: 700 15px/1.2 var(--font-body); text-align: center;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.hz-tile:hover { background: var(--surface-3); }
+.hz-tile:active { transform: scale(0.96); box-shadow: inset 0 0 0 2.5px var(--flame); }
+.hz-tile-icon {
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px;
+  background: var(--flame); color: var(--pill);
+}
+.hz-tile.hz-police .hz-tile-icon, .hz-tile.hz-camera .hz-tile-icon { background: var(--pill); color: var(--flame-2); }
+.hz-tile.hz-crash .hz-tile-icon, .hz-tile.hz-closure .hz-tile-icon { background: var(--bad); color: var(--pill-ink); }
+.hz-note { margin: 0; text-align: center; }
+
+/* ---------------------------------------------------------------- hazard markers */
+.hz-marker {
+  position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
+  border: 2.5px solid var(--pill-ink); border-radius: 50% 50% 50% 6px; transform: rotate(-45deg);
+  background: var(--flame); color: var(--pill); box-shadow: var(--shadow-sm); cursor: pointer;
+  margin-bottom: 6px;
+}
+.hz-marker > .icon { transform: rotate(45deg); }
+.hz-marker.hz-police, .hz-marker.hz-camera { background: var(--pill); color: var(--flame-2); }
+.hz-marker.hz-crash, .hz-marker.hz-closure { background: var(--bad); color: var(--pill-ink); }
+.hz-marker.is-mine { outline: 3px solid var(--accent); outline-offset: 1px; }
+.hz-marker:focus-visible { outline: 3px solid var(--accent); }
+
+.hz-detail { display: flex; align-items: center; gap: 14px; }
+.hz-detail-icon {
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px; flex: none;
+  background: var(--flame); color: var(--pill);
+}
+.hz-votes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hz-votes .btn { min-height: 56px; font-size: 16px; }
+
+/* ---------------------------------------------------------------- Crew sheet */
+.cm-status { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--ink-2); }
+.cm-status::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.cm-status[data-state="online"]::before { background: var(--good); box-shadow: 0 0 0 4px color-mix(in srgb, var(--good) 22%, transparent); }
+.cm-status[data-state="connecting"]::before { background: var(--warn); }
+
+.cm-friends { gap: 10px; }
+.cm-friend-card { border-radius: var(--r-lg); background: var(--surface-2); overflow: hidden; }
+.cm-friend-card > * + * { border-top: 1px solid var(--line); }
+.cm-friend-row { min-height: 64px; }
+.cm-avatar {
+  display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; flex: none;
+  background: var(--accent); color: var(--pill-ink); font: 800 18px/1 var(--font-display);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+.cm-badge {
+  min-width: 24px; height: 24px; padding: 0 7px; border-radius: 12px; flex: none;
+  background: var(--bad); color: var(--pill-ink); font: 700 12px/24px var(--font-body); text-align: center;
+}
+.cm-remove { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; padding: 8px 12px; }
+.cm-remove .small { margin-right: auto; }
+.cm-error { margin: 0; color: var(--bad); min-height: 0; }
+.cm-error:empty { display: none; }
+.cm-code { font: 600 13px/1.3 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+.cm-qr-box:empty { display: none; }
+.cm-qr-box { display: grid; place-items: center; padding: 6px 0 2px; }
+.cm-qr { width: min(200px, 60vw); height: auto; border-radius: var(--r-md); box-shadow: var(--shadow-sm); }
+/* QR stays dark-on-light in both themes so any scanner can read it */
+.cm-qr-bg { fill: #ffffff; }
+.cm-qr-fg { fill: #1d1b24; }
+
+/* ---------------------------------------------------------------- chat thread */
+.cm-thread-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cm-thread {
+  flex: 1; min-height: 180px; max-height: 42vh; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: var(--r-lg); background: var(--surface-2);
+}
+.cm-thread-empty { margin: auto; text-align: center; max-width: 30ch; }
+.cm-msg {
+  display: flex; flex-direction: column; gap: 3px; max-width: 82%; padding: 9px 13px; border-radius: 18px;
+  font-size: 16px; line-height: 1.35; overflow-wrap: anywhere;
+}
+.cm-msg.is-in { align-self: flex-start; background: var(--surface); color: var(--ink); border-bottom-left-radius: 6px; box-shadow: var(--shadow-sm); }
+.cm-msg.is-out { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 6px; }
+.cm-msg.is-failed { opacity: 0.6; outline: 2px dashed var(--bad); }
+.cm-msg-meta { font-size: 11px; opacity: 0.7; align-self: flex-end; font-variant-numeric: tabular-nums; }
+.cm-quick { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.cm-quick .chip { min-height: 44px; flex: none; font-size: 14px; }
+.cm-compose { display: flex; align-items: center; gap: 8px; }
+.cm-chat-input { flex: 1; min-width: 0; min-height: 56px; border-radius: 999px; }
+.cm-send { width: 56px; min-height: 56px; padding: 0; flex: none; }
+.cm-mic {
+  display: grid; place-items: center; width: 60px; height: 60px; flex: none; border: 0; border-radius: 50%;
+  background: var(--pill); color: var(--pill-ink); cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none;
+  transition: transform 0.12s ease, background-color 0.15s ease;
+}
+.cm-mic.is-listening { background: var(--flame); color: var(--pill); transform: scale(1.08); animation: cm-pulse 1.2s ease-in-out infinite; }
+.cm-chat-status { margin: 0; min-height: 1.4em; }
+@keyframes cm-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--flame) 55%, transparent); }
+  50% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--flame) 0%, transparent); }
+}
+
+/* ---------------------------------------------------------------- friend fallback marker */
+.cm-friend { display: flex; flex-direction: column; align-items: center; gap: 3px; transition: opacity 0.4s ease; }
+.cm-friend.is-stale { opacity: 0.45; }
+.cm-friend-pin {
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent); color: var(--pill-ink); border: 2.5px solid var(--pill-ink); box-shadow: var(--shadow-sm);
+}
+.cm-friend-name {
+  padding: 3px 8px; border-radius: 999px; background: var(--pill); color: var(--pill-ink);
+  font: 700 12px/1.2 var(--font-body); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cm-mic.is-listening { animation: none; }
+}

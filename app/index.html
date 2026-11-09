@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; worker-src 'self' blob:; child-src 'self' blob:; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1b24">
+<meta name="description" content="Cars Map: GPS navigation with your own custom car, crowd hazard reports and friends.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cars Map">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Cars Map</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/search.css">
+<link rel="stylesheet" href="css/nav.css">
+<link rel="stylesheet" href="css/car.css">
+<link rel="stylesheet" href="css/social.css">
+<link rel="stylesheet" href="css/assistant.css">
+<link rel="stylesheet" href="css/history.css">
+<link rel="stylesheet" href="css/race.css">
+<script src="vendor/maplibre-gl.js" defer></script>
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<div id="app" data-mode="explore">
+  <div id="map"></div>
+
+  <div id="intro" class="intro" aria-hidden="true">
+    <div class="intro-scan"></div>
+    <div class="intro-mark">
+      <h1>Cars <span>Map</span></h1>
+      <p id="intro-status">Finding you</p>
+    </div>
+  </div>
+
+  <div class="hud hud-top">
+    <div id="search-slot"></div>
+    <div id="nav-banner-slot"></div>
+  </div>
+
+  <div id="notices" class="notices" aria-live="assertive"></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <div id="hud-left" class="hud hud-left"></div>
+  <div id="fabs" class="hud hud-right"></div>
+
+  <div class="hud hud-bottom">
+    <div id="bottom-slot"></div>
+    <nav id="dock" class="dock" aria-label="Main menu"></nav>
+  </div>
+
+  <div id="loc-banner" class="loc-banner" role="alert" hidden>
+    <p id="loc-banner-text">Turn on location so Cars Map can find you and guide you.</p>
+    <button type="button" class="btn btn-accent btn-sm" id="loc-banner-btn">Allow</button>
+  </div>
+
+  <section id="sheet" class="sheet" aria-labelledby="sheet-title" hidden>
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <header class="sheet-head">
+      <h2 id="sheet-title"></h2>
+      <button type="button" class="icon-btn" id="sheet-close" aria-label="Close panel">
+        <svg class="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+    <div class="sheet-body" id="sheet-body"></div>
+  </section>
+</div>
+<noscript>Cars Map needs JavaScript turned on.</noscript>
+</body>
+</html>

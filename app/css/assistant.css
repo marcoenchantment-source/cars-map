@@ -1,0 +1,65 @@
+/* assistant module styles: the copilot card above the dock (listening, working, reply, typed box) */
+.copilot-layer {
+  position: absolute; z-index: 35; pointer-events: none;
+  left: var(--edge-l); right: calc(var(--edge-r) + 76px);
+  bottom: calc(var(--edge-b) + var(--dock-h) + 16px);
+  display: flex; justify-content: center;
+}
+.copilot-layer > * { pointer-events: auto; }
+[data-mode="navigate"] .copilot-layer, [data-mode="race"] .copilot-layer { bottom: calc(var(--edge-b) + 104px); }
+[data-mode="preview"] .copilot-layer { bottom: auto; top: calc(var(--edge-t) + 70px); right: var(--edge-r); }
+@media (min-width: 900px) { .copilot-layer { left: auto; width: 440px; } }
+
+.copilot-card {
+  position: relative; width: 100%; display: flex; flex-direction: column; gap: 10px;
+  padding: 10px 12px; border-radius: var(--r-xl);
+  background: var(--pill); color: var(--pill-ink); box-shadow: var(--shadow);
+  animation: copilot-in 0.18s ease-out;
+}
+.copilot-card[data-state="listening"], .copilot-card[data-state="working"] { flex-direction: row; align-items: center; border-radius: 999px; }
+.copilot-main {
+  flex: 1; min-width: 0; min-height: 52px; display: flex; align-items: center; gap: 12px;
+  padding: 0 8px 0 4px; border: 0; background: none; color: inherit; text-align: left; font: inherit; cursor: pointer;
+}
+.copilot-card[data-state="reply"] .copilot-main { padding-right: 36px; cursor: default; }
+.copilot-main > .icon { color: var(--flame-2); }
+.copilot-card[data-state="listening"] .copilot-main > .icon { color: var(--accent); }
+.copilot-text { font: 700 17px/1.3 var(--font-body); overflow-wrap: anywhere; }
+.copilot-card[data-state="listening"] .copilot-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.copilot-type { flex: none; background: var(--pill-2); color: var(--pill-ink); box-shadow: none; }
+.copilot-close {
+  position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: none; color: var(--pill-ink-2); cursor: pointer;
+}
+.copilot-card[data-state="compose"] .copilot-close { position: static; }
+.copilot-warn .copilot-main > .icon { color: var(--flame); }
+
+.copilot-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.copilot-action { flex: 1 1 140px; min-height: 56px; font-size: 17px; text-decoration: none; }
+.copilot-actions .btn-ghost { background: var(--pill-2); color: var(--pill-ink); box-shadow: none; }
+
+.copilot-help { margin: 0; color: var(--pill-ink-2); }
+.copilot-form { display: flex; gap: 8px; }
+.copilot-form .input { flex: 1; min-width: 0; background: var(--surface); color: var(--ink); border-color: var(--pill-2); }
+.copilot-form .btn { flex: none; width: 56px; min-height: 48px; padding: 0; }
+.copilot-card .chip { background: var(--pill-2); color: var(--pill-ink); border-color: transparent; min-height: 40px; }
+
+/* level indicator: four bars that dance while listening, taller once speech is heard */
+.copilot-level { display: inline-flex; align-items: center; gap: 3px; height: 26px; flex: none; }
+.copilot-level i { display: block; width: 4px; height: 8px; border-radius: 2px; background: var(--accent); animation: copilot-bar 0.9s ease-in-out infinite; }
+.copilot-level i:nth-child(2) { animation-delay: 0.15s; }
+.copilot-level i:nth-child(3) { animation-delay: 0.3s; }
+.copilot-level i:nth-child(4) { animation-delay: 0.45s; }
+.copilot-card[data-sound="on"] .copilot-level i { background: var(--flame-2); animation-duration: 0.5s; }
+.copilot-card[data-state="working"] .copilot-main > .icon { animation: copilot-pulse 1s ease-in-out infinite; }
+
+@keyframes copilot-bar { 0%, 100% { transform: scaleY(0.6); } 50% { transform: scaleY(2.6); } }
+@keyframes copilot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes copilot-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .copilot-card, .copilot-level i, .copilot-card[data-state="working"] .copilot-main > .icon { animation: none; }
+  .copilot-level i { height: 14px; }
+  .copilot-level i:nth-child(odd) { height: 20px; }
+  .copilot-card[data-sound="on"] .copilot-level i { height: 24px; }
+}

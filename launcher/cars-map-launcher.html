@@ -1,0 +1,210 @@
+<title>Cars Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@600;700;800&display=swap">
+<style>
+/* Layout: one centred column; the car drives across a lavender road band at the top, the launch
+   button sits under it, then the notebook checklist and the feedback card. Tokens come from the
+   original Cars Map prototype. */
+:root {
+  --land: #f1ecf8; --surface: #ffffff; --surface-2: #f6f3fb; --line: #e2dcec;
+  --ink: #1d1b24; --ink-2: #5d5872; --pill: #1d1b24; --pill-ink: #ffffff;
+  --accent: #7b4dff; --accent-ink: #ffffff; --flame: #ff8a00; --flame-2: #ffe14d;
+  --good: #2e9e5b; --road: #ffffff; --water: #b9d7f4;
+  --display: "Saira Semi Condensed", "Arial Narrow", "Trebuchet MS", sans-serif;
+  --body: "Figtree", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --land: #25222f; --surface: #1d1b24; --surface-2: #262331; --line: #363245;
+    --ink: #f2f0f7; --ink-2: #b4adc8; --pill: #34313f; --pill-ink: #ffffff;
+    --accent: #9b78ff; --accent-ink: #14111c; --road: #3b3748; --water: #1b344f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --land: #25222f; --surface: #1d1b24; --surface-2: #262331; --line: #363245;
+  --ink: #f2f0f7; --ink-2: #b4adc8; --pill: #34313f; --pill-ink: #ffffff;
+  --accent: #9b78ff; --accent-ink: #14111c; --road: #3b3748; --water: #1b344f; color-scheme: dark;
+}
+body { background: var(--land); color: var(--ink); font: 500 16px/1.5 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 560px; margin: 0 auto; padding-block: 20px 48px; display: grid; gap: 22px; }
+h1 { margin: 0; font: italic 800 clamp(44px, 13vw, 68px)/0.9 var(--display); text-transform: uppercase; letter-spacing: 0.01em; }
+h1 span { color: var(--flame); }
+h2 { margin: 0; font: 700 22px/1.2 var(--display); text-wrap: balance; }
+p { margin: 0; }
+.lede { color: var(--ink-2); max-width: 46ch; }
+.stage { position: relative; height: 150px; border-radius: 22px; overflow: hidden; background: var(--surface-2); }
+.stage .lane { position: absolute; left: -10%; right: -10%; bottom: 28px; height: 30px; background: var(--road); border-block: 3px solid var(--line); }
+.stage .lane::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 3px dashed var(--line); }
+.stage .water { position: absolute; right: -30px; top: -40px; width: 160px; height: 120px; border-radius: 50%; background: var(--water); opacity: 0.7; }
+#car { position: absolute; bottom: 36px; left: 50%; width: 200px; transform: translateX(-50%); animation: cruise 3.2s ease-in-out infinite; }
+@keyframes cruise { 50% { transform: translate(-50%, -3px); } }
+.flame { opacity: 0; transform-box: fill-box; transform-origin: right center; }
+.flame.on { animation: pop 0.17s ease-out; }
+@keyframes pop { 0% { opacity: 1; transform: scale(0.3); } 55% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.15); } }
+.launch { display: grid; gap: 12px; }
+.go { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; border-radius: 999px; text-decoration: none;
+  background: linear-gradient(100deg, var(--accent) 0%, var(--accent) 55%, var(--flame) 100%); color: #fff;
+  font: 800 22px/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; box-shadow: 0 12px 26px -12px var(--accent); }
+.go[aria-disabled="true"] { background: var(--surface-2); color: var(--ink-2); box-shadow: inset 0 0 0 2px var(--line); pointer-events: none; }
+.linkrow { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.linkrow code { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 13px; color: var(--ink-2); }
+.btn { border: 0; border-radius: 999px; min-height: 40px; padding: 0 16px; background: var(--pill); color: var(--pill-ink); font: 700 14px/1 var(--body); cursor: pointer; }
+.btn:focus-visible, .go:focus-visible, textarea:focus-visible, .star:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.card { background: var(--surface); border-radius: 22px; padding: 20px; display: grid; gap: 14px; }
+.qr { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; }
+#qr { width: 132px; height: 132px; background: #fff; border-radius: 12px; padding: 8px; display: grid; place-items: center; }
+#qr svg, #qr img { width: 100%; height: 100%; }
+@media (max-width: 420px) { .qr { grid-template-columns: 1fr; justify-items: start; } }
+.steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.notebook { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.notebook li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: start; }
+.tick { width: 24px; height: 24px; border-radius: 8px; background: var(--good); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+.notebook small { display: block; color: var(--ink-2); font-size: 14px; }
+.eyebrow { font: 800 12px/1 var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.stars { display: flex; gap: 6px; }
+.star { width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--line); background: none; color: var(--ink-2); font-size: 22px; cursor: pointer; }
+.star[aria-pressed="true"] { background: var(--flame); border-color: var(--flame); color: #1d1b24; }
+textarea { width: 100%; min-height: 110px; box-sizing: border-box; border-radius: 14px; border: 2px solid var(--line); background: var(--surface-2); color: var(--ink); font: 500 16px/1.4 var(--body); padding: 12px; resize: vertical; }
+.status { font-size: 14px; color: var(--ink-2); min-height: 1.4em; }
+.muted { color: var(--ink-2); font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { #car { animation: none; } .flame.on { animation: none; } }
+</style>
+
+<main>
+  <header style="display:grid;gap:10px">
+    <p class="eyebrow">Your navigation app</p>
+    <h1>Cars <span>Map</span></h1>
+    <p class="lede">GPS navigation with your own car on the map. Flames, friends, hazard reports and a voice copilot included.</p>
+  </header>
+
+  <div class="stage" aria-hidden="true">
+    <div class="water"></div>
+    <div class="lane"></div>
+    <svg id="car" viewBox="-20 0 140 56"></svg>
+  </div>
+
+  <section class="launch" aria-labelledby="launch-title">
+    <h2 id="launch-title" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Open the app</h2>
+    <a class="go" id="go" href="#" target="_blank" rel="noopener" aria-disabled="true">Starting soon</a>
+    <div class="linkrow"><code id="link-text">The live link appears here once Claude starts it in the morning.</code><button class="btn" id="copy" type="button" hidden>Copy</button></div>
+  </section>
+
+  <section class="card" aria-labelledby="phone-title">
+    <h2 id="phone-title">Drive with it</h2>
+    <div class="qr">
+      <div id="qr" aria-label="QR code for the app link"><span class="muted">QR code</span></div>
+      <ol class="steps">
+        <li>Open the link on your phone (scan this code from the PC).</li>
+        <li>Allow location, and the microphone for voice.</li>
+        <li>Tap <strong>Where to?</strong>, pick a place, press <strong>Go</strong>.</li>
+        <li>Optional: Share → Add to Home Screen for a full-screen app.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="notes-title">
+    <p class="eyebrow">From your notebook</p>
+    <h2 id="notes-title">What's built</h2>
+    <ul class="notebook">
+      <li><span class="tick">✓</span><span>Real map, search and turn-by-turn voice guidance<small>Live traffic switches on when you add a free TomTom key in Settings.</small></span></li>
+      <li><span class="tick">✓</span><span>Voice copilot<small>"Take me to Kings Park", "nearest servo", "report police", "text Sam I'm 10 minutes away", music and calls.</small></span></li>
+      <li><span class="tick">✓</span><span>Hazard reports<small>Police, speed cameras, crashes, weather, roadworks, closures. Warned ahead on your route.</small></span></li>
+      <li><span class="tick">✓</span><span>Friends and voice-to-text chat<small>Your location only goes to friends you switch on, end-to-end encrypted.</small></span></li>
+      <li><span class="tick">✓</span><span>Your car as the icon<small>Paint, rims, body, and flames that pop single, double or triple every 1, 3 or 5 seconds.</small></span></li>
+      <li><span class="tick">✓</span><span>Track day<small>The map fits the whole track to your screen; lap timer with best lap.</small></span></li>
+      <li><span class="tick">✓</span><span>Roads you've driven<small>A glowing trail over every road you've used.</small></span></li>
+      <li><span class="tick">✓</span><span>Road changes need 50 drivers<small>A new or changed road shows on the map once 50 different drivers have passed it.</small></span></li>
+    </ul>
+  </section>
+
+  <section class="card" aria-labelledby="fb-title">
+    <p class="eyebrow">After your drive</p>
+    <h2 id="fb-title">How did it go?</h2>
+    <div class="stars" role="group" aria-label="Rating" id="stars"></div>
+    <label for="fb-text" class="muted">What worked, what didn't, what to add next. Claude reads this.</label>
+    <textarea id="fb-text" maxlength="4000" placeholder="e.g. Voice came in late at the roundabout on Canning Hwy…"></textarea>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" id="fb-send" type="button">Send feedback</button><span class="status" id="fb-status" role="status"></span></div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function () {
+  // ---- the owner's prototype car, unchanged art ----
+  var LOOK = { color: '#1e88e5', rim: 'five', pat: 'double', int: 3 };
+  function wheel(cx, style) {
+    var s = '<circle cx="' + cx + '" cy="42" r="11" fill="#17171a"/><circle cx="' + cx + '" cy="42" r="7.6" fill="#2a2a30"/>';
+    if (style === 'dish') { s += '<circle cx="' + cx + '" cy="42" r="6.6" fill="#cfd3d8"/><circle cx="' + cx + '" cy="42" r="3.4" fill="#9aa0a8"/>'; }
+    else {
+      var n = style === 'mesh' ? 14 : 5, w = style === 'mesh' ? 0.8 : 2;
+      for (var i = 0; i < n; i++) s += '<line x1="' + cx + '" y1="42" x2="' + cx + '" y2="35.4" stroke="#cfd3d8" stroke-width="' + w + '" transform="rotate(' + (i * 360 / n) + ' ' + cx + ' 42)"/>';
+      s += '<circle cx="' + cx + '" cy="42" r="1.9" fill="#cfd3d8"/>';
+    }
+    return s;
+  }
+  var car = document.getElementById('car');
+  car.innerHTML =
+    '<g class="flame"><polygon points="8,40 -12,38 -3,42 -17,46 8,46" fill="#ff8a00"/><polygon points="8,41 -4,40 1,43 -5,45 8,45" fill="#ffe14d"/></g>' +
+    '<path d="M6 40L8 29Q10 25 20 24L40 21Q48 8 64 8L82 8Q94 9 100 21L110 24Q116 27 116 35L116 40Z" fill="' + LOOK.color + '"/>' +
+    '<path d="M45 21Q51 12 64 12L80 12Q88 13 92 21Z" fill="#cde6f7"/><path d="M68 12L68 21" stroke="' + LOOK.color + '" stroke-width="1.5"/>' +
+    '<rect x="108" y="29" width="7" height="4" rx="1.5" fill="#fff3b0"/>' + wheel(30, LOOK.rim) + wheel(90, LOOK.rim);
+  var flame = car.querySelector('.flame');
+  function pop() {
+    var n = { single: 1, double: 2, triple: 3 }[LOOK.pat] || 0;
+    for (var i = 0; i < n; i++) setTimeout(function () { flame.classList.remove('on'); void flame.getBBox(); flame.classList.add('on'); }, i * 190);
+  }
+  pop(); setInterval(pop, LOOK.int * 1000);
+
+  // ---- live link (kept in the artifact's database so it can change without republishing) ----
+  var go = document.getElementById('go'), linkText = document.getElementById('link-text'), copy = document.getElementById('copy'), qrBox = document.getElementById('qr');
+  function isAppUrl(u) { return typeof u === 'string' && /^https:\/\/[a-z0-9.-]+(\/[^\s"'<>]*)?$/i.test(u) && u.length < 300; }
+  function showLink(url) {
+    go.href = url; go.textContent = 'Open Cars Map'; go.setAttribute('aria-disabled', 'false');
+    linkText.textContent = url; copy.hidden = false;
+    if (window.qrcode) {
+      try { var q = qrcode(0, 'M'); q.addData(url); q.make(); qrBox.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); }
+      catch (e) { qrBox.textContent = 'QR unavailable'; }
+    }
+  }
+  copy.addEventListener('click', function () {
+    var t = linkText.textContent;
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { copy.textContent = 'Copied'; }, selectText); else selectText();
+  });
+  function selectText() { var r = document.createRange(); r.selectNodeContents(linkText); var s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+
+  // ---- feedback ----
+  var rating = 0, stars = document.getElementById('stars');
+  for (var i = 1; i <= 5; i++) (function (v) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'star'; b.textContent = '★'; b.setAttribute('aria-label', v + ' star' + (v > 1 ? 's' : '')); b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', function () { rating = v; Array.prototype.forEach.call(stars.children, function (s, k) { s.setAttribute('aria-pressed', String(k < v)); }); });
+    stars.appendChild(b);
+  })(i);
+  var send = document.getElementById('fb-send'), status = document.getElementById('fb-status'), text = document.getElementById('fb-text');
+
+  (async function () {
+    var db = window.claude && window.claude.use ? await window.claude.use('db') : null;
+    if (!db) { status.textContent = 'Sign in to claude.ai to send feedback here, or just tell Claude in chat.'; send.disabled = true; return; }
+    var timer = setTimeout(function () { if (go.getAttribute('aria-disabled') === 'true') linkText.textContent = 'Could not load the live link. Ask Claude for it in chat.'; }, 10000);
+    try {
+      db.doc('config/app').onSnapshot(function (snap) {
+        clearTimeout(timer);
+        var data = snap && (snap.data ? snap.data() : snap);
+        if (data && isAppUrl(data.url)) showLink(data.url);
+      }, function () { clearTimeout(timer); });
+    } catch (e) { clearTimeout(timer); }
+    send.addEventListener('click', async function () {
+      var body = text.value.trim();
+      if (!body && !rating) { status.textContent = 'Add a rating or a few words first.'; return; }
+      send.disabled = true; status.textContent = 'Sending…';
+      try {
+        await db.collection('feedback').add({ rating: rating, text: body.slice(0, 4000), at: new Date().toISOString() });
+        status.textContent = 'Sent. Claude will read it next time you chat.'; text.value = '';
+      } catch (e) { status.textContent = 'Could not send. Tell Claude in chat instead.'; }
+      send.disabled = false;
+    });
+  })();
+})();
+</script>

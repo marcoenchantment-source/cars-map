@@ -1,0 +1,312 @@
+{
+ "formatVersion": "0.0.12",
+ "routes": [
+  {
+   "summary": {
+    "lengthInMeters": 3590,
+    "travelTimeInSeconds": 900,
+    "trafficDelayInSeconds": 480,
+    "trafficLengthInMeters": 1200,
+    "departureTime": "2026-11-10T10:00:00+08:00",
+    "arrivalTime": "2026-11-10T10:15:00+08:00",
+    "noTrafficTravelTimeInSeconds": 420,
+    "historicTrafficTravelTimeInSeconds": 600,
+    "liveTrafficIncidentsTravelTimeInSeconds": 900
+   },
+   "legs": [
+    {
+     "summary": {
+      "lengthInMeters": 3590,
+      "travelTimeInSeconds": 900
+     },
+     "points": [
+      {
+       "latitude": -31.9505,
+       "longitude": 115.8605
+      },
+      {
+       "latitude": -31.952,
+       "longitude": 115.86
+      },
+      {
+       "latitude": -31.954,
+       "longitude": 115.859
+      },
+      {
+       "latitude": -31.956,
+       "longitude": 115.857
+      },
+      {
+       "latitude": -31.958,
+       "longitude": 115.854
+      },
+      {
+       "latitude": -31.96,
+       "longitude": 115.85
+      },
+      {
+       "latitude": -31.962,
+       "longitude": 115.845
+      },
+      {
+       "latitude": -31.964,
+       "longitude": 115.84
+      },
+      {
+       "latitude": -31.966,
+       "longitude": 115.835
+      },
+      {
+       "latitude": -31.968,
+       "longitude": 115.83
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "startPointIndex": 0,
+     "endPointIndex": 9,
+     "sectionType": "TRAVEL_MODE",
+     "travelMode": "car"
+    },
+    {
+     "startPointIndex": 3,
+     "endPointIndex": 5,
+     "sectionType": "TRAFFIC",
+     "simpleCategory": "JAM",
+     "effectiveSpeedInKmh": 18,
+     "delayInSeconds": 300,
+     "magnitudeOfDelay": 2,
+     "tec": {
+      "causes": [
+       {
+        "mainCauseCode": 1
+       }
+      ],
+      "effectCode": 4
+     }
+    },
+    {
+     "startPointIndex": 6,
+     "endPointIndex": 7,
+     "sectionType": "TRAFFIC",
+     "simpleCategory": "ROAD_CLOSURE",
+     "effectiveSpeedInKmh": 0,
+     "delayInSeconds": 180,
+     "magnitudeOfDelay": 4
+    },
+    {
+     "startPointIndex": 7,
+     "endPointIndex": 8,
+     "sectionType": "TRAFFIC",
+     "simpleCategory": "JAM",
+     "effectiveSpeedInKmh": 9,
+     "delayInSeconds": 60,
+     "magnitudeOfDelay": 3
+    },
+    {
+     "startPointIndex": 5,
+     "endPointIndex": 8,
+     "sectionType": "TOLL_ROAD"
+    }
+   ],
+   "guidance": {
+    "instructions": [
+     {
+      "routeOffsetInMeters": 0,
+      "travelTimeInSeconds": 0,
+      "point": {
+       "latitude": -31.9505,
+       "longitude": 115.8605
+      },
+      "pointIndex": 0,
+      "drivingSide": "LEFT",
+      "countryCode": "AUS",
+      "possibleCombineWithNext": false,
+      "instructionType": "LOCATION_DEPARTURE",
+      "street": "Roe Street",
+      "maneuver": "DEPART",
+      "message": "Leave from Roe Street"
+     },
+     {
+      "routeOffsetInMeters": 415,
+      "travelTimeInSeconds": 60,
+      "point": {
+       "latitude": -31.954,
+       "longitude": 115.859
+      },
+      "pointIndex": 2,
+      "drivingSide": "LEFT",
+      "countryCode": "AUS",
+      "possibleCombineWithNext": false,
+      "instructionType": "TURN",
+      "street": "Beaufort St",
+      "roadNumbers": [
+       "53"
+      ],
+      "turnAngleInDecimalDegrees": -90,
+      "junctionType": "REGULAR",
+      "maneuver": "TURN_LEFT",
+      "message": "Turn left onto Beaufort St"
+     },
+     {
+      "routeOffsetInMeters": 1067,
+      "travelTimeInSeconds": 200,
+      "point": {
+       "latitude": -31.958,
+       "longitude": 115.854
+      },
+      "pointIndex": 4,
+      "drivingSide": "LEFT",
+      "countryCode": "AUS",
+      "possibleCombineWithNext": false,
+      "instructionType": "TURN",
+      "street": "Canning Hwy",
+      "roadNumbers": [
+       "6"
+      ],
+      "roundaboutExitNumber": 2,
+      "junctionType": "ROUNDABOUT",
+      "maneuver": "ROUNDABOUT_RIGHT",
+      "message": "At the roundabout take the second exit onto Canning Hwy"
+     },
+     {
+      "routeOffsetInMeters": 2026,
+      "travelTimeInSeconds": 500,
+      "point": {
+       "latitude": -31.962,
+       "longitude": 115.845
+      },
+      "pointIndex": 6,
+      "drivingSide": "LEFT",
+      "countryCode": "AUS",
+      "possibleCombineWithNext": false,
+      "instructionType": "TURN",
+      "exitNumber": "12",
+      "signpostText": "Fremantle",
+      "roadNumbers": [
+       "1"
+      ],
+      "turnAngleInDecimalDegrees": -20,
+      "junctionType": "REGULAR",
+      "maneuver": "MOTORWAY_EXIT_LEFT",
+      "message": "Take exit 12 towards Fremantle"
+     },
+     {
+      "routeOffsetInMeters": 3590,
+      "travelTimeInSeconds": 900,
+      "point": {
+       "latitude": -31.968,
+       "longitude": 115.83
+      },
+      "pointIndex": 9,
+      "drivingSide": "LEFT",
+      "countryCode": "AUS",
+      "possibleCombineWithNext": false,
+      "instructionType": "LOCATION_ARRIVAL",
+      "street": "Essex Street",
+      "maneuver": "ARRIVE_RIGHT",
+      "message": "You have arrived. Your destination is on the right"
+     }
+    ],
+    "instructionGroups": [
+     {
+      "firstInstructionIndex": 0,
+      "lastInstructionIndex": 4,
+      "groupLengthInMeters": 3590,
+      "groupMessage": "Leave from Roe Street"
+     }
+    ]
+   }
+  },
+  {
+   "summary": {
+    "lengthInMeters": 3747,
+    "travelTimeInSeconds": 780,
+    "trafficDelayInSeconds": 0,
+    "noTrafficTravelTimeInSeconds": 760,
+    "historicTrafficTravelTimeInSeconds": 770,
+    "liveTrafficIncidentsTravelTimeInSeconds": 780
+   },
+   "legs": [
+    {
+     "summary": {},
+     "points": [
+      {
+       "latitude": -31.9505,
+       "longitude": 115.8605
+      },
+      {
+       "latitude": -31.949,
+       "longitude": 115.856
+      },
+      {
+       "latitude": -31.952,
+       "longitude": 115.848
+      },
+      {
+       "latitude": -31.958,
+       "longitude": 115.84
+      },
+      {
+       "latitude": -31.964,
+       "longitude": 115.834
+      },
+      {
+       "latitude": -31.968,
+       "longitude": 115.83
+      }
+     ]
+    }
+   ],
+   "sections": [
+    {
+     "startPointIndex": 0,
+     "endPointIndex": 5,
+     "sectionType": "TRAVEL_MODE",
+     "travelMode": "car"
+    }
+   ],
+   "guidance": {
+    "instructions": [
+     {
+      "routeOffsetInMeters": 0,
+      "travelTimeInSeconds": 0,
+      "point": {
+       "latitude": -31.9505,
+       "longitude": 115.8605
+      },
+      "pointIndex": 0,
+      "instructionType": "LOCATION_DEPARTURE",
+      "street": "Roe Street",
+      "maneuver": "DEPART"
+     },
+     {
+      "routeOffsetInMeters": 1281,
+      "travelTimeInSeconds": 300,
+      "point": {
+       "latitude": -31.952,
+       "longitude": 115.848
+      },
+      "pointIndex": 2,
+      "instructionType": "TURN",
+      "street": "Mounts Bay Road",
+      "maneuver": "KEEP_LEFT"
+     },
+     {
+      "routeOffsetInMeters": 3747,
+      "travelTimeInSeconds": 780,
+      "point": {
+       "latitude": -31.968,
+       "longitude": 115.83
+      },
+      "pointIndex": 5,
+      "instructionType": "LOCATION_ARRIVAL",
+      "maneuver": "ARRIVE"
+     }
+    ]
+   }
+  }
+ ]
+}

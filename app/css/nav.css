@@ -1,0 +1,171 @@
+/* nav module: driving HUD (banner, speed gauge, ETA bar), demo-drive chip, arrival sheet.
+   Ink pills from the owner's prototype, violet accent, flame orange for the manoeuvre arrow,
+   Saira Semi Condensed numerals. The HUD pills are dark in both themes. */
+
+/* ---------------------------------------------------------------- manoeuvre banner */
+.nav-banner {
+  position: relative; overflow: hidden;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  min-height: 96px; padding: 12px 14px 12px 12px; border-radius: var(--r-xl);
+  background: linear-gradient(155deg, var(--pill-2) 0%, var(--pill) 58%);
+  color: var(--pill-ink); box-shadow: var(--shadow);
+}
+.nav-banner::after {
+  content: ""; position: absolute; left: 18px; right: 18px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, var(--accent), var(--flame));
+  opacity: 0.85;
+}
+.nav-arrow {
+  display: grid; place-items: center; width: 72px; height: 72px; border-radius: 20px;
+  background: rgb(255 255 255 / 0.06); color: var(--flame);
+  box-shadow: inset 0 0 0 1.5px rgb(255 138 0 / 0.28);
+  transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+.nav-arrow-svg { display: block; overflow: visible; }
+.nav-a-dim { opacity: 0.3; }
+.nav-a-exit { font: 800 9.5px/1 var(--font-display); fill: var(--pill-ink); }
+.nav-banner[data-imminent="true"] .nav-arrow {
+  background: linear-gradient(145deg, var(--flame-2), var(--flame)); color: var(--pill);
+  box-shadow: 0 0 0 4px rgb(255 138 0 / 0.22);
+  animation: nav-throb 1.1s ease-in-out infinite;
+}
+.nav-banner[data-imminent="true"] .nav-a-exit { fill: var(--pill); }
+.nav-banner-text { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.nav-dist { display: flex; align-items: baseline; gap: 5px; line-height: 1; white-space: nowrap; }
+.nav-dist-v { font: 800 44px/0.92 var(--font-display); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.nav-dist-u { font: 700 22px/1 var(--font-display); color: var(--pill-ink-2); }
+.nav-road {
+  font: 700 20px/1.15 var(--font-body); color: var(--pill-ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-wrap: balance;
+}
+.nav-then {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 9px 7px; border-radius: 16px; background: rgb(255 255 255 / 0.08); color: var(--flame-2);
+}
+.nav-then-label { font: 800 11px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--pill-ink-2); }
+.nav-then-svg { display: block; }
+.nav-banner[data-state="reroute"] .nav-arrow { color: var(--accent); box-shadow: inset 0 0 0 1.5px rgb(123 77 255 / 0.4); }
+.nav-banner[data-state="reroute"] .nav-dist-v { font-size: 30px; letter-spacing: 0.01em; }
+.nav-banner[data-state="reroute"] .nav-road { font-size: 16px; color: var(--pill-ink-2); }
+.nav-spin { animation: nav-spin 1.1s linear infinite; }
+
+/* ---------------------------------------------------------------- speed gauge */
+.nav-gauge {
+  position: relative; width: 96px; height: 96px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 32%, var(--pill-2), var(--pill) 72%);
+  color: var(--pill-ink); box-shadow: var(--shadow);
+}
+.nav-gauge-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.nav-gauge-track { stroke: rgb(255 255 255 / 0.12); stroke-width: 7; stroke-linecap: round; }
+.nav-gauge-arc {
+  stroke: var(--accent); stroke-width: 7; stroke-linecap: round;
+  transition: stroke-dasharray 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), stroke 0.3s ease;
+  filter: drop-shadow(0 0 3px var(--accent));
+}
+.nav-gauge[data-hot="true"] .nav-gauge-arc { stroke: var(--flame); filter: drop-shadow(0 0 4px var(--flame)); }
+.nav-gauge-read { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; padding-top: 4px; }
+.nav-gauge-v { font: 800 34px/0.9 var(--font-display); font-variant-numeric: tabular-nums; }
+.nav-gauge-u { margin-top: 3px; font: 800 10px/1 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--pill-ink-2); }
+
+.nav-gps-pill {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px;
+  background: var(--flame); color: #1d1b24; font: 800 12px/1 var(--font-body); letter-spacing: 0.04em; box-shadow: var(--shadow-sm);
+  animation: nav-blink 1.6s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------- ETA bar */
+.nav-eta {
+  display: flex; align-items: center; gap: 8px; min-height: 76px; padding: 10px;
+  border-radius: 999px; background: var(--pill); color: var(--pill-ink); box-shadow: var(--shadow);
+}
+.nav-eta-btn {
+  flex: none; display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--pill-2); color: var(--pill-ink); cursor: pointer;
+  transition: transform 0.12s ease, background-color 0.15s ease, color 0.15s ease;
+}
+.nav-eta-btn:hover { background: color-mix(in srgb, var(--pill-2) 80%, white); }
+.nav-eta-btn:active { transform: scale(0.94); }
+.nav-eta-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.nav-eta-btn[data-muted="true"] { background: rgb(255 138 0 / 0.16); color: var(--flame); }
+.nav-end { background: var(--bad); color: #fff; }
+.nav-end:hover { background: color-mix(in srgb, var(--bad) 85%, black); }
+.nav-end-label { display: none; }
+.nav-end[data-confirm="true"] {
+  display: flex; gap: 6px; width: auto; padding: 0 18px 0 14px; border-radius: 999px;
+  box-shadow: 0 0 0 4px rgb(229 57 53 / 0.3); animation: nav-throb 0.9s ease-in-out infinite;
+}
+.nav-end[data-confirm="true"] .nav-end-label { display: inline; font: 800 19px/1 var(--font-display); letter-spacing: 0.06em; text-transform: uppercase; }
+.nav-eta-stats { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+.nav-eta-arrive { display: flex; align-items: baseline; gap: 4px; line-height: 1; white-space: nowrap; }
+.nav-eta-time { font: 800 30px/0.95 var(--font-display); font-variant-numeric: tabular-nums; }
+.nav-eta-ampm { font: 700 16px/1 var(--font-display); color: var(--pill-ink-2); }
+.nav-eta-sub {
+  display: flex; align-items: baseline; gap: 6px; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font: 700 15px/1.1 var(--font-display); color: var(--pill-ink-2); font-variant-numeric: tabular-nums;
+}
+.nav-eta-sub > :first-child { color: var(--flame-2); }
+.nav-eta-dot { opacity: 0.6; }
+
+/* ---------------------------------------------------------------- demo drive chip */
+.nav-demo {
+  display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px;
+  background: var(--pill); color: var(--pill-ink); box-shadow: var(--shadow-sm);
+}
+.nav-demo-label {
+  display: inline-flex; align-items: center; gap: 6px; padding: 0 8px 0 10px;
+  font: 800 12px/1 var(--font-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--flame-2);
+}
+.nav-demo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--flame); animation: nav-blink 1.2s ease-in-out infinite; }
+.nav-demo-speed {
+  min-width: 44px; height: 44px; padding: 0 6px; border: 0; border-radius: 999px; background: transparent;
+  color: var(--pill-ink-2); font: 800 15px/1 var(--font-display); cursor: pointer; transition: background-color 0.15s, color 0.15s;
+}
+.nav-demo-speed:hover { color: var(--pill-ink); }
+.nav-demo-speed[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.nav-demo-stop {
+  display: grid; place-items: center; width: 44px; height: 44px; margin-left: 2px; border: 0; border-radius: 50%;
+  background: var(--pill-2); color: var(--pill-ink); cursor: pointer;
+}
+.nav-demo-stop:hover { background: var(--bad); color: #fff; }
+
+/* ---------------------------------------------------------------- arrival sheet */
+.nav-arr-hero { display: flex; align-items: center; gap: 14px; }
+.nav-arr-flag {
+  display: grid; place-items: center; width: 56px; height: 56px; flex: none; border-radius: 18px;
+  background: linear-gradient(145deg, var(--accent), var(--flame)); color: #fff; box-shadow: var(--shadow-sm);
+}
+.nav-arr-place { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nav-arr-place strong { font: 800 20px/1.15 var(--font-display); overflow: hidden; text-overflow: ellipsis; }
+.nav-arr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.nav-arr-stat { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-2); }
+.nav-arr-stat:first-child { background: var(--pill); color: var(--pill-ink); }
+.nav-arr-stat:first-child .nav-arr-stat-label { color: var(--pill-ink-2); }
+.nav-arr-stat-label { font: 800 11px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.nav-arr-stat-value { font: 800 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.nav-arr-stat-value small { font-size: 14px; font-weight: 700; opacity: 0.7; }
+.nav-stars { display: flex; gap: 4px; justify-content: space-between; max-width: 320px; }
+.nav-star {
+  display: grid; place-items: center; width: 52px; height: 52px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--ink-3); cursor: pointer; transition: transform 0.12s ease, color 0.15s ease;
+}
+.nav-star:hover { color: var(--flame); }
+.nav-star:active { transform: scale(0.9); }
+.nav-star[aria-pressed="true"] { color: var(--flame); }
+.nav-star[aria-pressed="true"] svg { fill: var(--flame); }
+.nav-arr-notes { min-height: 84px; padding: 12px 16px; resize: vertical; line-height: 1.4; }
+.nav-arr-report { min-height: 160px; padding: 12px; font: 500 13px/1.45 ui-monospace, Menlo, Consolas, monospace; }
+.nav-arr-done { min-height: 56px; font-size: 17px; }
+
+/* ---------------------------------------------------------------- motion */
+@keyframes nav-spin { to { transform: rotate(360deg); } }
+@keyframes nav-throb { 50% { transform: scale(1.05); } }
+@keyframes nav-blink { 50% { opacity: 0.55; } }
+
+@media (max-width: 360px) {
+  .nav-dist-v { font-size: 38px; }
+  .nav-arrow { width: 62px; height: 62px; }
+  .nav-eta-btn { width: 52px; height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-spin, .nav-banner[data-imminent="true"] .nav-arrow, .nav-end[data-confirm="true"], .nav-gps-pill, .nav-demo-dot { animation: none; }
+}
