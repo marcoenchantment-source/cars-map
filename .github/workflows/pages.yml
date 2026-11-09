@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: 24
       - name: Unit tests
-        run: node --test tests/
+        run: node --test "tests/*.test.js"
       - name: Build offline cache list
         run: node scripts/precache.mjs
       - uses: actions/configure-pages@v5

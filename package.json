@@ -10,7 +10,7 @@
     "precache": "node scripts/precache.mjs",
     "start": "node scripts/precache.mjs && node server/serve.mjs",
     "tunnel": "node scripts/tunnel.mjs",
-    "test": "node --test tests/"
+    "test": "node --test \"tests/*.test.js\""
   },
   "devDependencies": {
     "maplibre-gl": "5.24.0",
