@@ -7,6 +7,7 @@ import { angleDiff, haversine, normalizeBearing } from '../core/geo.js';
 const SNAP_DISTANCE_M = 400; // jump instead of gliding across big gaps
 const NAV_PITCH_3D = 58;
 const EXPLORE_PITCH_3D = 52;
+const STREET_ZOOM = 16.2; // the "around my car" level the intro lands on
 const AUTO_RESUME_MS = 12000;
 
 /** Target zoom for a speed in m/s: closer in town, further out on the freeway. */
@@ -103,6 +104,7 @@ export function createCamera(map, { store, bus }) {
       // Pitch and padding go in every frame: a one-off easeTo would be cancelled by the next jumpTo.
       map.jumpTo({ center: [pose.lng, pose.lat], bearing: pose.bearing, zoom: navZoom, pitch: nextPitch, padding: navPadding() });
     } else if (mode === 'explore') {
+      if (map.isEasing()) return; // let re-centre / tilt animations finish instead of cutting them short
       map.jumpTo({ center: [pose.lng, pose.lat] });
     }
   }
@@ -128,7 +130,8 @@ export function createCamera(map, { store, bus }) {
   // Mode and follow transitions set pitch/padding once; per-frame updates only move centre/bearing/zoom.
   store.select((s) => `${s.mode}|${s.follow}`, () => applyFrame(true));
 
-  function applyFrame(animate) {
+  /** zoomBack: re-centre was pressed, so return to street level if the user had zoomed out. */
+  function applyFrame(animate, { zoomBack = false } = {}) {
     const { mode, follow: following } = store.get();
     const h = map.getContainer().clientHeight;
     if (mode === 'navigate' && following) {
@@ -143,11 +146,13 @@ export function createCamera(map, { store, bus }) {
         duration: animate ? 900 : 0,
       });
     } else if (mode === 'explore' && following && displayed) {
+      const zoomedOut = map.getZoom() < STREET_ZOOM - 0.6;
       map.easeTo({
         center: [displayed.lng, displayed.lat],
+        ...(zoomBack && zoomedOut ? { zoom: STREET_ZOOM, bearing: 0 } : {}),
         pitch: is3d() ? Math.max(map.getPitch(), EXPLORE_PITCH_3D) : 0,
         padding: { top: 0, bottom: 0, left: 0, right: 0 },
-        duration: animate ? 700 : 0,
+        duration: animate ? (zoomBack && zoomedOut ? 1100 : 700) : 0,
       });
     } else if (mode !== 'navigate') {
       const pad = map.getPadding();
@@ -173,7 +178,7 @@ export function createCamera(map, { store, bus }) {
     recenter() {
       clearTimeout(resumeTimer);
       store.set({ follow: true });
-      applyFrame(true);
+      applyFrame(true, { zoomBack: true });
     },
   });
 }
