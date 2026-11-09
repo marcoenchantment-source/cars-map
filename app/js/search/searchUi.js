@@ -2,6 +2,7 @@
 import { isAbort } from '../routing/http.js';
 import { CATEGORIES } from './geocoder.js';
 import { iconForKind } from './places.js';
+import { parseAddressQuery, hasExactMatch } from './addresses.js';
 
 const DEBOUNCE_MS = 250;
 const QUICK = [
@@ -93,6 +94,21 @@ export function createSearchUi(ctx, { services, memory, here, onPick }) {
     }
   }
 
+  /** A note when a typed house number isn't in the free map data (and no TomTom key is set). */
+  function addressNote(query, results) {
+    const parsed = parseAddressQuery(query);
+    if (!parsed || hasExactMatch(results, parsed) || results.some((p) => p.source === 'estimate' || p.source === 'tomtom')) return null;
+    const hasKey = !!store.get().settings.tomtomKey;
+    return stateCard(
+      'pin',
+      `No. ${parsed.number} isn’t on the free map yet`,
+      hasKey
+        ? 'Showing the street and nearby numbers. Check the number, or add the suburb.'
+        : 'Showing the street and nearby numbers. Add your free TomTom key in Settings to find every Australian address.',
+      hasKey ? undefined : { label: 'Add TomTom key', onClick: () => bus.emit('settings:open', { focus: 'tomtomKey' }) },
+    );
+  }
+
   function renderList() {
     if (!view) return;
     const list = ui.clear(view.list);
@@ -106,6 +122,8 @@ export function createSearchUi(ctx, { services, memory, here, onPick }) {
     } else if (status === 'done' && results.length === 0) {
       list.append(stateCard('search', `Nothing found for “${query}”`, 'Check the spelling, or add the suburb (for example “Hay Street Subiaco”).'));
     } else if (status === 'done') {
+      const missing = addressNote(query, results);
+      if (missing) list.append(missing);
       list.append(ui.el('div', { class: 'list' }, results.map((p) => placeRow(p))));
     } else {
       renderIdle(list);

@@ -4,6 +4,7 @@
 import { haversine } from '../core/geo.js';
 import { fetchJson, ServiceError, isAbort } from '../routing/http.js';
 import { cleanText, sanitizePlace } from './places.js';
+import { parseAddressQuery, rankForAddress, hasExactMatch, estimateAddress, tomtomSearch } from './addresses.js';
 
 export const GEOCODE_TIMEOUT_MS = 8000;
 
@@ -173,14 +174,41 @@ export async function searchPlaces(query, opts) {
   const args = { ...opts, limit };
   const category = detectCategory(q);
   if (category) return searchCategory(category, args);
+  const parsed = parseAddressQuery(q);
+  if (opts.tomtomKey) {
+    try {
+      const tt = await tomtomSearch(q, { ...args, key: opts.tomtomKey, fetchJson: (url, o) => fetchJson(url, { ...o, fetchImpl: opts.fetchImpl }) });
+      if (tt.length) return parsed ? rankForAddress(tt, parsed) : tt;
+    } catch (err) {
+      if (isAbort(err)) throw err;
+      console.warn(`[search] TomTom search failed: ${err.message}`);
+    }
+  }
+  let results = null;
   try {
-    const results = await photonSearch(q, args);
-    if (results.length || !opts.fallbackOnEmpty) return results;
+    results = await photonSearch(q, args);
   } catch (err) {
     if (isAbort(err)) throw err;
     console.warn(`[search] Photon failed: ${err.message}`);
   }
-  return nominatimSearch(q, args);
+  if (results && parsed) return addressResults(parsed, results, args);
+  if (results && (results.length || !opts.fallbackOnEmpty)) return results;
+  const fallback = await nominatimSearch(q, args);
+  return parsed ? rankForAddress(fallback, parsed) : fallback;
+}
+
+/** House-number queries: exact match first; otherwise an estimate between known neighbours. */
+async function addressResults(parsed, results, args) {
+  if (hasExactMatch(results, parsed)) return rankForAddress(results, parsed);
+  let samples = results;
+  try {
+    samples = [...results, ...(await photonSearch(parsed.street, { ...args, limit: 40 }))];
+  } catch (err) {
+    if (isAbort(err)) throw err;
+  }
+  const estimate = estimateAddress(parsed, samples, args.near);
+  const ranked = rankForAddress(results, parsed);
+  return (estimate ? [estimate, ...ranked] : ranked).slice(0, args.limit);
 }
 
 /** Address or POI at a point; the Place keeps the exact point that was asked about. */

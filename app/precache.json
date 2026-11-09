@@ -1,5 +1,5 @@
 {
- "version": "8bfe5807a5b4",
+ "version": "6860f5852c83",
  "files": [
   "./",
   "./css/app.css",
@@ -102,6 +102,7 @@
   "./js/routing/router.js",
   "./js/routing/tomtom.js",
   "./js/routing/valhalla.js",
+  "./js/search/addresses.js",
   "./js/search/geocoder.js",
   "./js/search/index.js",
   "./js/search/memory.js",

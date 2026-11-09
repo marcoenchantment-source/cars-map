@@ -30,7 +30,10 @@ export async function init(ctx) {
 
   const services = Object.freeze({
     search: (q, { near, limit, signal, fallbackOnEmpty } = {}) =>
-      geocoder.searchPlaces(q, { near: validPoint(near) ? near : here().point, limit, signal, endpoints, fallbackOnEmpty }),
+      geocoder.searchPlaces(q, {
+        near: validPoint(near) ? near : here().point, limit, signal, endpoints, fallbackOnEmpty,
+        tomtomKey: store.get().settings.tomtomKey || '',
+      }),
     searchCategory: (id, { near, limit, signal } = {}) =>
       geocoder.searchCategory(id, { near: validPoint(near) ? near : here().point, limit, signal, endpoints }),
     reverse: (point, { signal } = {}) => geocoder.reverseGeocode(point, { signal, endpoints }),
