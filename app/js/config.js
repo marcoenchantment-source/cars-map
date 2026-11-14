@@ -8,7 +8,7 @@ export const APP_VERSION = '1.1.0';
  * It is a browser key: it ships to every phone, so it MUST be restricted to this app's
  * domain in the TomTom dashboard (Keys → Domain whitelisting). Empty = free services only.
  */
-export const TOMTOM_KEY = '';
+export const TOMTOM_KEY = 'vInD9GaLqpqL9cEYbAD2dtm7aDEl9Ay1';
 
 /** Perth CBD: the start view before GPS answers (the original prototype was set in Perth). */
 export const DEFAULT_CENTER = [115.8605, -31.9505];

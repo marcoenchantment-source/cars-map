@@ -8,7 +8,7 @@ const TRAFFIC_LAYER = 'cm-traffic';
 
 function trafficTiles(base, key, theme) {
   const style = theme === 'dark' ? 'relative0-dark' : 'relative0';
-  return `${base}/traffic/map/4/tile/flow/${style}/{z}/{x}/{y}.png?key=${encodeURIComponent(key)}&tileSize=256&thickness=8`;
+  return `${base}/traffic/map/4/tile/flow/${style}/{z}/{x}/{y}.png?key=${encodeURIComponent(key)}&tileSize=256`;
 }
 
 export function initMapOptions(view, { store, bus, ui, config }) {
