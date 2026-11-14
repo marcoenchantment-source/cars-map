@@ -143,9 +143,7 @@ const AVOID_SETTINGS = [
 
 function avoidTraffic(env) {
   if (env.state().settings?.tomtomKey) return reply('Routes already use live traffic, and I pick the quickest one.');
-  return reply("I don't have live traffic yet, so routes use typical speeds. Add a free TomTom key in Settings.", {
-    buttons: [{ label: 'Open Settings', action: 'settings' }],
-  });
+  return reply("I don't have live traffic right now, so routes use typical speeds.");
 }
 
 export async function avoid(slots, env) {

@@ -137,10 +137,7 @@ export function createPreview(ctx, { services, memory, here }) {
     const missed = AVOIDS.filter((a) => s[a.key] && route && !route.options?.[a.key]).map((a) => a.noun);
     if (missed.length) out.push(ui.el('p', { class: 'rp-note rp-note-warn', text: `Couldn’t plan around ${missed.join(' and ')}: this route may still use them.` }));
     if (!s.tomtomKey) {
-      out.push(ui.el('button', {
-        type: 'button', class: 'rp-note rp-note-link', text: 'No live traffic — add a TomTom key in Settings',
-        on: { click: () => bus.emit('settings:open', { focus: 'tomtomKey' }) },
-      }));
+      out.push(ui.el('p', { class: 'rp-note', text: 'Times use typical speeds, not live traffic.' }));
     }
     return out;
   }

@@ -98,14 +98,10 @@ export function createSearchUi(ctx, { services, memory, here, onPick }) {
   function addressNote(query, results) {
     const parsed = parseAddressQuery(query);
     if (!parsed || hasExactMatch(results, parsed) || results.some((p) => p.source === 'estimate' || p.source === 'tomtom')) return null;
-    const hasKey = !!store.get().settings.tomtomKey;
     return stateCard(
       'pin',
-      `No. ${parsed.number} isn’t on the free map yet`,
-      hasKey
-        ? 'Showing the street and nearby numbers. Check the number, or add the suburb.'
-        : 'Showing the street and nearby numbers. Add your free TomTom key in Settings to find every Australian address.',
-      hasKey ? undefined : { label: 'Add TomTom key', onClick: () => bus.emit('settings:open', { focus: 'tomtomKey' }) },
+      `Couldn’t find No. ${parsed.number}`,
+      'Showing the street and nearby numbers. Check the number, or add the suburb.',
     );
   }
 

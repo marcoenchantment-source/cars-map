@@ -168,7 +168,7 @@ test('where_am_i reverse geocodes the current position', async () => {
 
 test('unknown requests: no key → capability list; key → Claude', async () => {
   const noKey = await setup({}).ex.handle('tell me a joke');
-  assert.match(noKey.text, /Add a Claude key in Settings/);
+  assert.match(noKey.text, /I can navigate, find places/);
   let asked = null;
   const withKey = setup({}, { state: { settings: { anthropicKey: 'sk-ant-x' } }, claude: async (t) => { asked = t; return { text: 'Why did the roo…', links: [], buttons: [] }; } });
   const r = await withKey.ex.handle('tell me a joke');

@@ -130,7 +130,7 @@ export async function routeTomTom({ base, key, from, to, options, bearing, alter
     if (err?.status === 400 && msg.includes('language')) {
       json = await fetchJson(buildTomTomUrl(base, key, from, to, { options, bearing, alternatives, language: 'en-GB' }), opts);
     } else if (err?.status === 403 || err?.status === 401) {
-      throw new ServiceError('Your TomTom key was refused. Check it in Settings.', { code: 'http', status: err.status });
+      throw new ServiceError('Live traffic routing was refused.', { code: 'http', status: err.status });
     } else {
       throw err;
     }

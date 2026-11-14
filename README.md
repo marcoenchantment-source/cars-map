@@ -11,9 +11,9 @@ Open the GitHub Pages link on your phone, allow location (and the microphone for
 **Where to?**, then **Go**. Add it to your home screen for a full-screen app. It keeps working
 offline once loaded.
 
-Optional keys (Settings → Live traffic & AI, stored only on your phone):
-- **TomTom key** (free tier) for live traffic colours and traffic-aware routes.
-- **Claude API key** for a copilot that can answer anything.
+Live traffic, traffic-aware routes and full address search use the app's own TomTom key
+(`TOMTOM_KEY` in `app/js/config.js`), which must be restricted to the app's domain in the
+TomTom dashboard. Users never enter keys.
 
 ## Develop
 

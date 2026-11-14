@@ -27,7 +27,9 @@ const FEATURE_MODULES = [
 const INTRO_WAIT_MS = 3500;
 
 function initialState() {
-  const settings = { ...config.DEFAULT_SETTINGS, ...storage.load('settings', {}) };
+  // Keys are the developer's, never the user's: the TomTom key comes from config, and there is
+  // no Claude key in the browser (that needs a server). Stored values from older builds are ignored.
+  const settings = { ...config.DEFAULT_SETTINGS, ...storage.load('settings', {}), tomtomKey: config.TOMTOM_KEY, anthropicKey: '' };
   const car = { ...config.DEFAULT_CAR, ...storage.load('car', {}) };
   return {
     mode: 'explore', // explore | preview | navigate | race

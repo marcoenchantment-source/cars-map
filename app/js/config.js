@@ -1,7 +1,14 @@
 // App-wide constants. Every network host the app talks to is listed here.
 
 export const APP_NAME = 'Cars Map';
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.1.0';
+
+/**
+ * The app's own TomTom key (live traffic, traffic-aware routes, full address search).
+ * It is a browser key: it ships to every phone, so it MUST be restricted to this app's
+ * domain in the TomTom dashboard (Keys → Domain whitelisting). Empty = free services only.
+ */
+export const TOMTOM_KEY = '';
 
 /** Perth CBD: the start view before GPS answers (the original prototype was set in Perth). */
 export const DEFAULT_CENTER = [115.8605, -31.9505];
@@ -63,11 +70,9 @@ export const DEFAULT_SETTINGS = Object.freeze({
   buildings3d: true,
   view3d: true, // tilted chase view; false = flat top-down map
   mapView: 'standard', // standard | satellite | terrain | weather
-  traffic: true, // shown only when a TomTom key is set
+  traffic: true, // live traffic colours (needs TOMTOM_KEY)
   showDrivenRoads: true,
   car3d: true,
-  tomtomKey: '',
-  anthropicKey: '',
 });
 
 /** Hazard types users can report. `ttlMin` = minutes before a report fades unless re-confirmed. */

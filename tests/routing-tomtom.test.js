@@ -92,6 +92,6 @@ test('retries in en-GB when the language is rejected; refused key is explained',
   assert.deepEqual(seen, ['en-AU', 'en-GB']);
   assert.equal(routes.length, 2);
   const refused = async () => new Response('{"detailedError":{"code":"FORBIDDEN"}}', { status: 403 });
-  await assert.rejects(routeTomTom({ base: 'https://x', key: 'k', from: FROM, to: TO, fetchImpl: refused }), /TomTom key was refused/);
+  await assert.rejects(routeTomTom({ base: 'https://x', key: 'k', from: FROM, to: TO, fetchImpl: refused }), /routing was refused/);
   await assert.rejects(routeTomTom({ base: 'https://x', key: '', from: FROM, to: TO }), (e) => e.code === 'no-key');
 });

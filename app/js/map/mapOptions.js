@@ -34,7 +34,7 @@ export function initMapOptions(view, { store, bus, ui, config }) {
   map.on('error', (e) => {
     if (e?.sourceId === TRAFFIC_SOURCE && !syncTraffic.warned) {
       syncTraffic.warned = true;
-      ui.toast('Live traffic could not load. Check your TomTom key in Settings.', { tone: 'warn', ms: 5000 });
+      ui.toast('Live traffic could not load right now.', { tone: 'warn', ms: 5000 });
     }
   });
 
@@ -78,12 +78,11 @@ export function initMapOptions(view, { store, bus, ui, config }) {
             }),
             ui.toggleRow({
               id: 'opt-traffic', label: 'Live traffic',
-              hint: settings.tomtomKey ? 'Road colours show live speeds (TomTom)' : 'Add a free TomTom key in Settings to turn this on',
+              hint: settings.tomtomKey ? 'Road colours show live speeds' : 'Not available yet',
               checked: settings.traffic && !!settings.tomtomKey,
               onChange: (v) => {
                 if (v && !store.get().settings.tomtomKey) {
-                  ui.toast('Add your TomTom key in Settings first', { tone: 'warn' });
-                  bus.emit('settings:open', { focus: 'tomtomKey' });
+                  ui.toast('Live traffic isn’t available yet', { tone: 'warn' });
                   return;
                 }
                 setSetting('traffic', v);

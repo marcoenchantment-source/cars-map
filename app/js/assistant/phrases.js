@@ -85,4 +85,4 @@ export function shortenForSpeech(text, maxChars = 240) {
 }
 
 export const HELP_TEXT = 'Try "take me to Kings Park", "nearest servo", "report police", "how long left", "message Sam on my way", "call Mum" or "play music".';
-export const NO_KEY_TEXT = 'I can navigate, find places, report hazards, message your crew, call or text, and play music. Add a Claude key in Settings for anything else.';
+export const NO_KEY_TEXT = 'I can navigate, find places, report hazards, message your crew, call or text, and play music.';
