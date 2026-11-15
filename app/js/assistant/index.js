@@ -3,7 +3,7 @@
 import { createExecutor } from './executor.js';
 import { createBubble } from './bubble.js';
 import { getRecognition, startListening, errorMessage } from './listen.js';
-import { createContactsStore, renderContactsSection } from './contactsSettings.js';
+import { createContactsStore } from './contactsSettings.js';
 import { createClaudeSession } from './claude.js';
 import { buildTools } from './tools.js';
 import { reply } from './reply.js';
@@ -211,5 +211,6 @@ export async function init(ctx) {
     if (e.key === 'Escape' && bubble.isOpen()) cancel();
   });
 
-  ui.registerSettingsSection({ id: 'contacts', title: 'Quick contacts', order: 60, render: (c) => renderContactsSection(c, { ui, contacts }) });
+  // Emergency contacts are shown by the safety module (with the crash-alert switch); it reaches the store here.
+  ctx.actions.register('contactsStore', () => contacts);
 }

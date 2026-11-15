@@ -74,6 +74,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   mapWeather: false, // rain radar + conditions add-on
   showDrivenRoads: true,
   car3d: true,
+  crashAlert: false, // ask "Are you OK?" after a suspected crash, then alert emergency contacts
   ghostMode: false, // invisible: live location goes to nobody, drives aren't recorded for road changes
 });
 

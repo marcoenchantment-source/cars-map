@@ -106,6 +106,7 @@ function initCrew(ctx, nostr, getRoads) {
   safe('location', () => location.init());
   actions.register('sendMessage', (friendName, text) => chat.sendMessage(friendName, text));
   actions.register('listFriends', () => publicFriends());
+  actions.register('sendCrewMessage', (pubkey, text) => chat.send(pubkey, text));
   actions.register('openCrew', () => crew.open());
   return { chat, location, crew };
 }

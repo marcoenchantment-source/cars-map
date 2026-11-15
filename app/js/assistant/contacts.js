@@ -24,6 +24,21 @@ export function validateName(raw) {
 
 const digitsOf = (phone) => String(phone).replace(/\D/g, '');
 
+/** A Crew friend's public key (64 hex chars), or '' when absent/invalid. */
+export function validCrew(raw) {
+  return typeof raw === 'string' && /^[0-9a-f]{64}$/.test(raw) ? raw : '';
+}
+
+/** Link (or unlink with '') a contact to a Crew friend, for automatic crash alerts. New list. */
+export function setContactCrew(list, id, crew) {
+  const key = validCrew(crew);
+  return list.map((c) => {
+    if (c.id !== id) return c;
+    const { crew: _old, ...rest } = c;
+    return key ? { ...rest, crew: key } : rest;
+  });
+}
+
 /**
  * Add (or update by name) a contact. Returns a new list; never mutates.
  * @returns {{ok: true, list: object[], contact: object} | {ok: false, error: string}}
@@ -33,13 +48,14 @@ export function addContact(list, input, makeId = () => `c${Date.now().toString(3
   if (!name.ok) return name;
   const phone = validatePhone(input?.phone);
   if (!phone.ok) return phone;
+  const crew = validCrew(input?.crew);
   const existing = list.find((c) => c.name.toLowerCase() === name.value.toLowerCase());
   if (existing) {
-    const contact = { ...existing, phone: phone.value };
+    const contact = { ...existing, phone: phone.value, ...(crew ? { crew } : {}) };
     return { ok: true, contact, list: list.map((c) => (c.id === existing.id ? contact : c)) };
   }
-  if (list.length >= MAX_CONTACTS) return { ok: false, error: `You can keep up to ${MAX_CONTACTS} quick contacts. Remove one first.` };
-  const contact = { id: makeId(), name: name.value, phone: phone.value };
+  if (list.length >= MAX_CONTACTS) return { ok: false, error: `You can keep up to ${MAX_CONTACTS} emergency contacts. Remove one first.` };
+  const contact = { id: makeId(), name: name.value, phone: phone.value, ...(crew ? { crew } : {}) };
   return { ok: true, contact, list: [...list, contact] };
 }
 
@@ -54,7 +70,9 @@ export function sanitiseContacts(raw) {
   for (const item of raw.slice(0, MAX_CONTACTS)) {
     const name = validateName(item?.name);
     const phone = validatePhone(item?.phone);
-    if (name.ok && phone.ok && typeof item.id === 'string' && item.id.length <= 40) out.push({ id: item.id, name: name.value, phone: phone.value });
+    if (!(name.ok && phone.ok && typeof item.id === 'string' && item.id.length <= 40)) continue;
+    const crew = validCrew(item.crew);
+    out.push({ id: item.id, name: name.value, phone: phone.value, ...(crew ? { crew } : {}) });
   }
   return out;
 }

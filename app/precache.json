@@ -1,5 +1,5 @@
 {
- "version": "b44fa6371ff9",
+ "version": "0ac0a2eed9af",
  "files": [
   "./",
   "./css/app.css",
@@ -8,6 +8,7 @@
   "./css/history.css",
   "./css/nav.css",
   "./css/race.css",
+  "./css/safety.css",
   "./css/search.css",
   "./css/social.css",
   "./icons/icon-192.png",
@@ -102,6 +103,9 @@
   "./js/routing/router.js",
   "./js/routing/tomtom.js",
   "./js/routing/valhalla.js",
+  "./js/safety/alert.js",
+  "./js/safety/crashDetect.js",
+  "./js/safety/index.js",
   "./js/search/addresses.js",
   "./js/search/geocoder.js",
   "./js/search/index.js",

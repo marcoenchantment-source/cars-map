@@ -22,6 +22,7 @@ const FEATURE_MODULES = [
   './history/index.js', // trips, driven roads
   './race/index.js', // track day
   './assistant/index.js', // voice copilot
+  './safety/index.js', // emergency contacts + crash alert
 ];
 
 const INTRO_WAIT_MS = 3500;

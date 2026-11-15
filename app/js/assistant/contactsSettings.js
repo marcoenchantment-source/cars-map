@@ -1,5 +1,6 @@
-// "Quick contacts" settings section + the small store behind it (ctx.storage key 'contacts').
-import { addContact, removeContact, sanitiseContacts, fromPicker, telHref, MAX_CONTACTS } from './contacts.js';
+// "Emergency contacts" list + the small store behind it (ctx.storage key 'contacts').
+// The settings section itself is registered by the safety module, next to the crash-alert switch.
+import { addContact, removeContact, sanitiseContacts, fromPicker, telHref, setContactCrew, MAX_CONTACTS } from './contacts.js';
 
 const STORAGE_KEY = 'contacts';
 
@@ -19,10 +20,30 @@ export function createContactsStore(storage) {
     remove(id) {
       save(removeContact(list, id));
     },
+    setCrew(id, crew) {
+      save(setContactCrew(list, id, crew));
+    },
   });
 }
 
 const pickerAvailable = () => typeof navigator !== 'undefined' && 'contacts' in navigator && typeof navigator.contacts?.select === 'function';
+
+/** "Auto-alert in Crew" picker: which Crew friend gets an automatic crash alert for this contact. */
+function crewPicker(ui, c, crew, onPick) {
+  const select = ui.el(
+    'select',
+    { class: 'input cm-crew-pick', id: 'crew-' + c.id, 'aria-label': 'Crew friend for ' + c.name },
+    ui.el('option', { value: '', text: crew.length ? 'Not in my Crew (text and call only)' : 'Add them in Crew for automatic alerts' }),
+    crew.map((f) => ui.el('option', { value: f.pubkey, text: 'Auto-alert ' + f.name + ' in Crew', selected: f.pubkey === c.crew })),
+  );
+  select.disabled = crew.length === 0;
+  select.addEventListener('change', () => onPick(select.value));
+  return select;
+}
+
+function contactRowWithCrew(ui, c, { onRemove, crew, onPickCrew }) {
+  return ui.el('div', { class: 'stack cm-contact' }, contactRow(ui, c, onRemove), crewPicker(ui, c, crew, (pk) => onPickCrew(c, pk)));
+}
 
 function contactRow(ui, c, onRemove) {
   return ui.el(
@@ -36,12 +57,12 @@ function contactRow(ui, c, onRemove) {
 }
 
 /** Render the section into `container` (called each time Settings opens, and after changes). */
-export function renderContactsSection(container, { ui, contacts }) {
+export function renderContactsSection(container, { ui, contacts, crew = [] }) {
   const rerender = () => {
     ui.clear(container);
-    renderContactsSection(container, { ui, contacts });
+    renderContactsSection(container, { ui, contacts, crew });
   };
-  const status = ui.el('span', { class: 'row-hint', id: 'contact-status', 'aria-live': 'polite', text: 'Say "call Mum" or "text Mum on my way". Your phone opens the dialler or messages app; Cars Map can’t call or text silently.' });
+  const status = ui.el('span', { class: 'row-hint', id: 'contact-status', 'aria-live': 'polite', text: 'Link a contact to their Crew profile and a crash alert reaches them automatically. Otherwise you get a one-tap Text and Call. You can also say "call Mum".' });
   const name = ui.el('input', { class: 'input', id: 'contact-name', type: 'text', placeholder: 'Name, e.g. Mum', autocomplete: 'off', maxlength: '40' });
   const phone = ui.el('input', { class: 'input', id: 'contact-phone', type: 'tel', placeholder: '0412 345 678', autocomplete: 'off', inputmode: 'tel', maxlength: '20' });
   const add = () => {
@@ -71,8 +92,15 @@ export function renderContactsSection(container, { ui, contacts }) {
   const list = contacts.all();
   container.append(
     list.length
-      ? ui.el('div', { class: 'list' }, list.map((c) => contactRow(ui, c, (x) => { contacts.remove(x.id); rerender(); })))
-      : ui.el('p', { class: 'muted small', text: 'No quick contacts yet.' }),
+      ? ui.el('div', { class: 'list' }, list.map((c) => contactRowWithCrew(ui, c, {
+        crew,
+        onRemove: (x) => { contacts.remove(x.id); rerender(); },
+        onPickCrew: (x, pk) => {
+          contacts.setCrew(x.id, pk);
+          ui.toast(pk ? x.name + ' will get crash alerts in Crew' : x.name + ': text and call only', { tone: 'good' });
+        },
+      })))
+      : ui.el('p', { class: 'muted small', text: 'No emergency contacts yet. Add someone who should know if you crash.' }),
     ui.el(
       'div',
       { class: 'card stack' },
