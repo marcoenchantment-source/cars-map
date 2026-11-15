@@ -6,7 +6,7 @@ import {
   isValidLap, lapSummary, makeStartLine, spokenLap, stepLaps, stepRecording,
 } from '../app/js/race/laps.js';
 import { createDemoRun, demoCircuit, demoDistanceAt } from '../app/js/race/demo.js';
-import { capTracks, nextTrackName, sanitizeTracks, withLap } from '../app/js/race/tracksModel.js';
+import { capTracks, nextTrackName, sanitizeTracks, withLap, lapStats } from '../app/js/race/tracksModel.js';
 
 const START = [115.7845, -31.6626]; // near Wanneroo Raceway
 const T0 = 1_800_000_000_000;
@@ -200,6 +200,24 @@ test('tracks model: sanitise, cap, best lap, names', () => {
   assert.equal(withLap(t, 60000, 1).bestLap, 60000);
   const better = withLap(withLap(t, 60000, 1), 59000, 2);
   assert.equal(better.bestLap, 59000);
-  assert.equal(withLap(better, 61000, 3), better);
+  const slower = withLap(better, 61000, 3);
+  assert.equal(slower.bestLap, 59000, 'a slower lap never replaces the best');
+  assert.deepEqual(slower.laps.map((l) => l.ms), [60000, 59000, 61000], 'every lap is kept in the history');
+  assert.equal(withLap(better, NaN, 4), better);
   assert.equal(nextTrackName([{ name: 'Track 2' }]), 'Track 3');
+});
+
+test('lap history: capped at 50, sanitised from storage, stats newest first', () => {
+  let t = demoCircuit(START, { id: 'h' });
+  for (let i = 0; i < 60; i++) t = withLap(t, 60000 + i * 100, i);
+  assert.equal(t.laps.length, 50);
+  assert.equal(t.laps[0].ms, 61000, 'oldest laps drop off first');
+  const restored = sanitizeTracks([{ ...t, laps: [...t.laps, { ms: -5, at: 1 }, 'junk'] }])[0];
+  assert.equal(restored.laps.length, 50);
+  const stats = lapStats(restored);
+  assert.equal(stats.count, 50);
+  assert.equal(stats.best, 60000);
+  assert.equal(stats.newestFirst[0].ms, 65900);
+  assert.ok(stats.average > 61000 && stats.average < 66000);
+  assert.deepEqual(lapStats({ laps: [] }).newestFirst, []);
 });

@@ -71,3 +71,16 @@
 .race-empty p { margin: 0; }
 .race-steps { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-weight: 600; line-height: 1.35; }
 .race-steps li::marker { font-family: var(--font-display); font-weight: 800; color: var(--accent); }
+
+/* World tracks + lap history */
+.race-world-empty { padding: 14px 16px; margin: 0; }
+.race-history-title { margin: 4px 0 0; font: 800 24px/1.1 var(--font-display); text-wrap: balance; }
+.race-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.race-stat { display: grid; gap: 2px; padding: 12px; border-radius: var(--r-md); background: var(--surface-2); text-align: center; }
+.race-stat-value { font-size: 22px; font-weight: 800; }
+.race-stat-label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.race-lap { cursor: default; }
+.race-lap.is-best { background: var(--accent-soft); }
+.race-lap-delta { font-weight: 700; color: var(--bad); min-width: 56px; text-align: right; }
+.race-lap.is-best .race-lap-delta { color: var(--accent-strong); }
+.race-lap-time { font-size: 18px; color: var(--ink); min-width: 72px; text-align: right; }

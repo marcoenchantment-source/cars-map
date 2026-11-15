@@ -1,6 +1,6 @@
 // A race session on one track: race mode, the whole circuit fitted to the screen, lap timing
 // from GPS fixes, the lap panel, voice call-outs, and the optional demo driver.
-import { createLapTimer, currentLapMs, lapSummary, makeStartLine, spokenLap, stepLaps, formatLap } from './laps.js';
+import { createLapTimer, currentLapMs, lapSummary, makeStartLine, spokenLap, stepLaps, formatLap, LAPS } from './laps.js';
 import { computeTrackCamera } from './trackFit.js';
 import { createDemoRun, DEMO } from './demo.js';
 import { createLapPanel } from './panel.js';
@@ -74,6 +74,8 @@ export function startRaceSession(ctx, { track, layer, demo = false, onRecord, on
   let ended = false;
   let timer = createLapTimer(makeStartLine(track.start.point, track.start.heading), demo ? null : track.bestLap);
   let demoTimer = null;
+  // World tracks from map data may not know the racing direction: count laps either way.
+  const lapOpts = track.anyDirection ? { ...LAPS, anyDirection: true } : LAPS;
 
   ui.sheet.close();
   store.set({ mode: 'race', follow: false });
@@ -91,15 +93,14 @@ export function startRaceSession(ctx, { track, layer, demo = false, onRecord, on
   function onLap(event) {
     render();
     bus.emit('voice:say', { text: lapSpeech(event), priority: 'normal' });
-    if (!demo && event.isBest) {
-      onRecord?.(track, event.lap);
-      ui.toast(`New best lap: ${formatLap(event.lap.time)}`, { tone: 'good' });
-    }
+    if (demo) return;
+    onRecord?.(track, event.lap); // every lap goes into the track's history
+    if (event.isBest) ui.toast(`New best lap: ${formatLap(event.lap.time)}`, { tone: 'good' });
   }
 
   disposers.push(bus.on('gps:fix', (fix) => {
     if (!fix || Boolean(fix.simulated) !== demo) return;
-    const r = stepLaps(timer, fix);
+    const r = stepLaps(timer, fix, lapOpts);
     timer = r.state;
     layer.setYou([fix.lng, fix.lat]);
     if (r.event?.type === 'start') {

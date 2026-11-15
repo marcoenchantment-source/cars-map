@@ -1,4 +1,5 @@
-// Track day: record a circuit, race it with GPS lap timing, and a demo lap to try it at home.
+// Track day: world tracks (from OpenStreetMap), record your own circuit, race with GPS lap
+// timing and lap history, and a demo lap to try it at home.
 import { TRACK_LIMITS, capTracks, cleanTrackName, nextTrackName, removeTrack, sanitizeTracks, upsertTrack, withLap } from './tracksModel.js';
 import { createTrackLayer } from './trackLayer.js';
 import { startRaceSession } from './session.js';
@@ -99,8 +100,20 @@ export async function init(ctx) {
     race(demoCircuit(center), { demo: true });
   }
 
+  /** A world track joins "Your tracks" the first time you use it, keeping laps on later visits. */
+  function adopt(world) {
+    const saved = tracks.get(world.id);
+    const merged = saved
+      ? { ...world, createdAt: saved.createdAt, bestLap: saved.bestLap, bestLapAt: saved.bestLapAt, laps: saved.laps }
+      : { ...world, createdAt: Date.now() };
+    tracks.upsert(merged);
+    return tracks.get(world.id) ?? merged;
+  }
+
   const sheet = createRaceSheet(ctx, {
     tracks: () => tracks.list(),
+    onWorldRace: (w) => race(adopt(w)),
+    onWorldDemo: (w) => race(adopt(w), { demo: true }),
     onRace: (t) => race(t),
     onDemo: (t) => race(t, { demo: true }),
     onRecord: () => record(),

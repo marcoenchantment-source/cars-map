@@ -1,5 +1,5 @@
 // Pure saved-track helpers: validation, budget, best-lap updates. Stored under ctx.storage 'tracks'.
-export const TRACK_LIMITS = Object.freeze({ maxTracks: 20, maxChars: 600 * 1024, maxNameLength: 40 });
+export const TRACK_LIMITS = Object.freeze({ maxTracks: 20, maxChars: 900 * 1024, maxNameLength: 40, maxLaps: 50 });
 
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 const isCoord = (c) => Array.isArray(c) && isNum(c[0]) && isNum(c[1]) && Math.abs(c[0]) <= 180 && Math.abs(c[1]) <= 90;
@@ -27,7 +27,28 @@ export function sanitizeTrack(raw) {
     bbox,
     bestLap: isNum(raw.bestLap) && raw.bestLap > 0 ? raw.bestLap : null,
     bestLapAt: isNum(raw.bestLapAt) ? raw.bestLapAt : null,
+    laps: sanitizeLaps(raw.laps),
+    anyDirection: raw.anyDirection === true,
+    country: cleanTrackName(raw.country) || '',
+    source: raw.source === 'osm' ? 'osm' : 'recorded',
   };
+}
+
+/** Lap history [{ms, at}] oldest first, at most TRACK_LIMITS.maxLaps. */
+export function sanitizeLaps(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((l) => l && isNum(l.ms) && l.ms > 0 && l.ms < 6 * 3600 * 1000 && isNum(l.at))
+    .slice(-TRACK_LIMITS.maxLaps)
+    .map((l) => ({ ms: Math.round(l.ms), at: l.at }));
+}
+
+/** Lap stats for the history view: count, best, average and the laps newest first. */
+export function lapStats(track) {
+  const laps = track?.laps ?? [];
+  if (!laps.length) return { count: 0, best: track?.bestLap ?? null, average: null, newestFirst: [] };
+  const average = Math.round(laps.reduce((sum, l) => sum + l.ms, 0) / laps.length);
+  return { count: laps.length, best: track.bestLap ?? Math.min(...laps.map((l) => l.ms)), average, newestFirst: [...laps].reverse() };
 }
 
 export function sanitizeTracks(raw) {
@@ -65,10 +86,12 @@ export function removeTrack(tracks, id) {
   return tracks.filter((t) => t.id !== id);
 }
 
-/** New track with the lap recorded if it beats the stored best. */
+/** New track with the lap added to its history, and as best lap when it's the quickest. */
 export function withLap(track, ms, at) {
-  if (!isNum(ms) || (track.bestLap != null && track.bestLap <= ms)) return track;
-  return { ...track, bestLap: ms, bestLapAt: at };
+  if (!isNum(ms) || ms <= 0) return track;
+  const laps = [...(track.laps ?? []), { ms: Math.round(ms), at }].slice(-TRACK_LIMITS.maxLaps);
+  const isBest = track.bestLap == null || ms < track.bestLap;
+  return { ...track, laps, ...(isBest ? { bestLap: ms, bestLapAt: at } : {}) };
 }
 
 /** "Track 3" style default name not already taken. */

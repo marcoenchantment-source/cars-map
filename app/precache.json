@@ -1,5 +1,5 @@
 {
- "version": "0ac0a2eed9af",
+ "version": "d126ac590d6a",
  "files": [
   "./",
   "./css/app.css",
@@ -11,6 +11,7 @@
   "./css/safety.css",
   "./css/search.css",
   "./css/social.css",
+  "./data/world-tracks.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
@@ -96,6 +97,7 @@
   "./js/race/trackFit.js",
   "./js/race/trackLayer.js",
   "./js/race/tracksModel.js",
+  "./js/race/worldTracks.js",
   "./js/routing/http.js",
   "./js/routing/instructions.js",
   "./js/routing/normalize.js",

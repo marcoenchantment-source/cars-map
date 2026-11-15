@@ -110,7 +110,7 @@ export function stepLaps(state, fix, opts = LAPS) {
   if (!prev) return { state: Object.freeze({ ...state, prev: here }), event: null };
   const step = haversine([prev.lng, prev.lat], [fix.lng, fix.lat]);
   const running = state.lapStartedAt != null ? state.lapDistance + step : 0;
-  const c = crossedLine(prev, fix, state.line);
+  const c = crossedLine(prev, fix, state.line, { anyDirection: opts.anyDirection === true });
   if (!c) return { state: Object.freeze({ ...state, prev: here, lapDistance: running }), event: null };
   const afterLine = haversine(c.point, [fix.lng, fix.lat]);
   if (state.lapStartedAt == null) {
