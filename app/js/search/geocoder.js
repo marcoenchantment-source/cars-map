@@ -5,6 +5,7 @@ import { haversine } from '../core/geo.js';
 import { fetchJson, ServiceError, isAbort } from '../routing/http.js';
 import { cleanText, sanitizePlace } from './places.js';
 import { parseAddressQuery, rankForAddress, hasExactMatch, estimateAddress, tomtomSearch } from './addresses.js';
+import { searchByName } from './nameSearch.js';
 
 export const GEOCODE_TIMEOUT_MS = 8000;
 
@@ -175,10 +176,19 @@ export async function searchPlaces(query, opts) {
   const category = detectCategory(q);
   if (category) return searchCategory(category, args);
   const parsed = parseAddressQuery(q);
-  if (opts.tomtomKey) {
+  const tomtom = opts.tomtomKey
+    ? (text, lim) => tomtomSearch(text, { ...args, limit: lim, key: opts.tomtomKey, fetchJson: (url, o) => fetchJson(url, { ...o, fetchImpl: opts.fetchImpl }) })
+    : null;
+  if (!parsed) {
+    // Names ("Kings Park", "Hoyts Carousel"): ask every service at once and merge.
+    const sources = [tomtom, (text, lim) => photonSearch(text, { ...args, limit: lim })].filter(Boolean);
+    const fallback = (text, lim) => nominatimSearch(text, { ...args, limit: lim });
+    return searchByName(q, args, { sources, fallback });
+  }
+  if (tomtom) {
     try {
-      const tt = await tomtomSearch(q, { ...args, key: opts.tomtomKey, fetchJson: (url, o) => fetchJson(url, { ...o, fetchImpl: opts.fetchImpl }) });
-      if (tt.length) return parsed ? rankForAddress(tt, parsed) : tt;
+      const tt = await tomtom(q, limit);
+      if (tt.length) return rankForAddress(tt, parsed);
     } catch (err) {
       if (isAbort(err)) throw err;
       console.warn(`[search] TomTom search failed: ${err.message}`);

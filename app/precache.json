@@ -1,5 +1,5 @@
 {
- "version": "bec97ed8bbad",
+ "version": "703b0d66114b",
  "files": [
   "./",
   "./css/app.css",
@@ -106,6 +106,7 @@
   "./js/search/geocoder.js",
   "./js/search/index.js",
   "./js/search/memory.js",
+  "./js/search/nameSearch.js",
   "./js/search/pin.js",
   "./js/search/places.js",
   "./js/search/preview.js",
