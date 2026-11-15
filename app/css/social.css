@@ -119,3 +119,22 @@
 @media (prefers-reduced-motion: reduce) {
   .cm-mic.is-listening { animation: none; }
 }
+
+/* Ghost mode switch (Settings → Privacy): ghost glows when on, greys out when off. */
+.cm-ghost {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; border: 0; border-radius: var(--r-lg);
+  background: var(--surface-2); color: var(--ink); text-align: left; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;
+}
+.cm-ghost-icon {
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px; flex: none;
+  background: var(--surface-3); color: var(--ink-3); transition: color 0.25s, background-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+.cm-ghost[data-on="true"] { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+.cm-ghost[data-on="true"] .cm-ghost-icon {
+  background: var(--accent); color: #fff; transform: translateY(-2px);
+  box-shadow: 0 0 0 6px rgb(123 77 255 / 0.18), 0 0 26px 4px rgb(155 120 255 / 0.65);
+}
+.cm-code-toggle .icon:last-child { transition: transform 0.2s; color: var(--ink-3); }
+.cm-code-toggle[aria-expanded="true"] .icon:last-child { transform: rotate(90deg); }
+.cm-code-wrap > .stack { padding: 4px 16px 16px; }
+.cm-code-wrap .cm-qr-box { align-self: center; }

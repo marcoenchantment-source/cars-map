@@ -44,11 +44,16 @@ export function buildTomTomUrl(base, key, from, to, { options = {}, bearing, alt
   return `${base}/routing/1/calculateRoute/${locs}/json?${p}`;
 }
 
-/** TRAFFIC section → congestion level. magnitudeOfDelay: 0 unknown, 1 minor, 2 moderate, 3 major, 4 undefined/closure. */
+/**
+ * TRAFFIC section → congestion level. magnitudeOfDelay: 0 unknown, 1 minor, 2 moderate, 3 major,
+ * 4 undefined/closure. Only medium (moderate) and heavy (major) traffic is coloured on the route;
+ * minor or unknown delays count as 'free' and aren't drawn.
+ */
 export function trafficLevel(section) {
   if (section?.simpleCategory === 'ROAD_CLOSURE' || section?.magnitudeOfDelay === 4) return 'closed';
   if (section?.magnitudeOfDelay === 3) return 'heavy';
-  return 'slow';
+  if (section?.magnitudeOfDelay === 2) return 'slow';
+  return 'free';
 }
 
 const toLngLat = (p) => (Number.isFinite(p?.longitude) && Number.isFinite(p?.latitude) ? [p.longitude, p.latitude] : null);

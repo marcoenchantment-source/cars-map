@@ -1,4 +1,4 @@
-// History module: records real drives, draws every road driven, and the Logbook sheet.
+// History module: records real drives, draws every road driven, and the Trips sheet.
 import { createTripStore } from './tripStore.js';
 import { startRecorder } from './recorder.js';
 import { createDrivenLayer } from './drivenLayer.js';
@@ -13,7 +13,7 @@ export async function init(ctx) {
   const logbook = createLogbook(ctx, tripStore, {
     highlight: (id) => drivenLayer?.highlight(id),
   });
-  ctx.ui.addDockItem({ id: 'logbook', icon: 'history', label: 'Logbook', order: 50, onClick: () => logbook.open() });
+  ctx.ui.addDockItem({ id: 'logbook', icon: 'history', label: 'Trips', order: 50, onClick: () => logbook.open() });
   ctx.actions.register('openTrips', () => logbook.open());
 
   createDrivenLayer(ctx, tripStore)

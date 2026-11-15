@@ -10,7 +10,7 @@ import * as config from './config.js';
 import { createMapView } from './map/mapView.js';
 import { initTheme, resolveTheme } from './ui/theme.js';
 import { initSettings } from './settings/settings.js';
-import { initViewModes } from './map/viewModes.js';
+import { initViewModes, normaliseView } from './map/viewModes.js';
 import { initWeather } from './map/weather.js';
 
 /** Load order matters only for dock/fab order ties; each module is independent. */
@@ -29,7 +29,9 @@ const INTRO_WAIT_MS = 3500;
 function initialState() {
   // Keys are the developer's, never the user's: the TomTom key comes from config, and there is
   // no Claude key in the browser (that needs a server). Stored values from older builds are ignored.
-  const settings = { ...config.DEFAULT_SETTINGS, ...storage.load('settings', {}), tomtomKey: config.TOMTOM_KEY, anthropicKey: '' };
+  const stored = storage.load('settings', {});
+  const { mapView: _legacyView, traffic: _legacyTraffic, ...rest } = stored ?? {};
+  const settings = { ...config.DEFAULT_SETTINGS, ...rest, ...normaliseView(stored ?? {}), tomtomKey: config.TOMTOM_KEY, anthropicKey: '' };
   const car = { ...config.DEFAULT_CAR, ...storage.load('car', {}) };
   return {
     mode: 'explore', // explore | preview | navigate | race
@@ -138,7 +140,15 @@ async function boot() {
       console.error(`[boot] ${name} failed to start`, err);
     }
   }
-  actions.register('setMapView', (view) => store.set((s) => ({ settings: { ...s.settings, mapView: view } })));
+  // Copilot: "satellite view", "show terrain", "weather view", "standard map".
+  actions.register('setMapView', (view) => store.set((s) => {
+    const next = { ...s.settings };
+    if (view === 'satellite') Object.assign(next, { mapBase: 'satellite', mapTerrain: false });
+    else if (view === 'terrain') Object.assign(next, { mapBase: 'standard', mapTerrain: true });
+    else if (view === 'weather') next.mapWeather = true;
+    else Object.assign(next, { mapBase: 'standard', mapTerrain: false, mapWeather: false });
+    return { settings: next };
+  }));
   actions.register('recenter', () => mapView.camera.recenter());
   actions.register('openMapOptions', () => bus.emit('map:options'));
 

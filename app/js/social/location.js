@@ -135,8 +135,10 @@ export function createLocation(ctx, nostr, friends) {
       .catch(() => {}); // live location is best-effort; the next tick tries again
   }
 
+  const ghost = () => store.get().settings.ghostMode === true;
+
   function shareNow() {
-    if (simActive || !nostr.pubkey() || nostr.status().state !== 'online') return;
+    if (ghost() || simActive || !nostr.pubkey() || nostr.status().state !== 'online') return;
     const targets = friends.sharingWith();
     if (targets.length === 0) return;
     const s = store.get();
@@ -208,6 +210,12 @@ export function createLocation(ctx, nostr, friends) {
       if (Number.isFinite(p?.bearing)) lastBearing = p.bearing;
     });
     friends.onChange(onFriendsChanged);
+    // Ghost mode: tell everyone who could see me that I'm gone, at once; resume when it's off.
+    store.select((s) => s.settings.ghostMode === true, (on) => {
+      if (!nostr.pubkey()) return;
+      if (on) for (const pk of sharingSet) publishTo(pk, buildLocationOff(Date.now()));
+      else shareNow();
+    });
     setInterval(sweep, SWEEP_MS);
     setTimeout(loop, SHARE_MS);
   }

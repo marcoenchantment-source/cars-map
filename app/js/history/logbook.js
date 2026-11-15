@@ -1,4 +1,4 @@
-// Logbook sheet: totals, every saved trip (tap to see it on the map, two-tap delete) and a
+// Trips sheet (history of drives): totals, every saved trip (tap to see it on the map, two-tap delete) and a
 // small "peek" card in the bottom slot while a trip is shown. Place names are looked up lazily
 // with the search module's reverseGeocode and cached into the trip.
 import { bigDistance, tripPlaces, tripTotals, tripWhen } from './stats.js';
@@ -93,7 +93,7 @@ export function createLogbook(ctx, tripStore, drivenLayer) {
         ui.el('span', { class: 'num', text: `${d.text} · ${geo.formatDuration(trip.duration)}` }),
         tripPlaces(trip) ? ui.el('span', { class: 'trip-peek-places', text: tripPlaces(trip) }) : null,
       ),
-      ui.el('button', { type: 'button', class: 'btn btn-sm btn-ghost', text: 'Logbook', on: { click: () => open() } }),
+      ui.el('button', { type: 'button', class: 'btn btn-sm btn-ghost', text: 'Trips', on: { click: () => open() } }),
       ui.iconButton('close', 'Stop showing this trip', closePeek, { className: 'icon-btn trip-peek-close' }),
     );
     document.getElementById('bottom-slot')?.append(peek);
@@ -204,7 +204,7 @@ export function createLogbook(ctx, tripStore, drivenLayer) {
     closePeek();
     ui.sheet.open({
       id: SHEET_ID,
-      title: 'Logbook',
+      title: 'Trips',
       size: 'tall',
       render: (body) => {
         render(body);

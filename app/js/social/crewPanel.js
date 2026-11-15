@@ -1,17 +1,19 @@
-// The Crew sheet: connection status, friends (location switch, chat, remove), add a friend,
-// my friend code (text, copy, QR) and the community road-changes summary.
+// The Crew sheet: your name, your friend code (tap to reveal code + QR), add a friend, then your
+// crew (location switch, chat, remove). Ghost mode and road changes live in Settings → Privacy.
 import { qrSvg } from './qr.js';
 import { renderThread } from './chatView.js';
 
 const SHEET_ID = 'social-crew';
 
 export function createCrewPanel(ctx, { nostr, friends, chat, location, roads }) {
-  const { ui, config } = ctx;
+  const { ui, config, store } = ctx;
   let view = { name: 'list' };
   let parts = null;
   let thread = null;
+  let privacyRoads = null; // road-changes container inside Settings, while it's open
 
   function statusText() {
+    if (store.get().settings.ghostMode) return 'Ghost mode is on: nobody can see where you are.';
     const st = nostr.status();
     if (st.state === 'online') return `Connected · ${st.connected} of ${st.total} servers`;
     if (st.state === 'connecting') return 'Connecting…';
@@ -117,13 +119,46 @@ export function createCrewPanel(ctx, { nostr, friends, chat, location, roads }) 
     );
   }
 
-  function myCodeCard() {
+  function nameCard() {
     const nameInput = ui.el('input', { class: 'input', id: 'cm-my-name', maxlength: '32', value: friends.profileName(), placeholder: friends.myName() });
-    nameInput.addEventListener('change', () => friends.setProfileName(nameInput.value));
+    nameInput.addEventListener('change', () => {
+      friends.setProfileName(nameInput.value);
+      ui.toast('Name saved', { tone: 'good' });
+    });
+    return ui.el('label', { class: 'field card', for: 'cm-my-name' }, ui.el('span', { text: 'Your name (friends see this)' }), nameInput);
+  }
+
+  /** "Share my friend code" row; tapping it reveals the code, QR, Copy and Share. */
+  function codeCard() {
+    const panel = ui.el('div', { class: 'stack', hidden: true, id: 'cm-code-panel' });
+    const toggle = ui.el(
+      'button',
+      { type: 'button', class: 'row cm-code-toggle', 'aria-expanded': 'false', 'aria-controls': 'cm-code-panel' },
+      ui.el('span', { class: 'row-icon' }, ui.icon('qr', { size: 20 })),
+      ui.el('span', { class: 'row-text' },
+        ui.el('span', { class: 'row-title', text: 'Share my friend code' }),
+        ui.el('span', { class: 'row-hint', text: 'Tap to show your code and QR for crew mates' })),
+      ui.icon('chevron', { size: 20 }),
+    );
+    let built = false;
+    toggle.addEventListener('click', () => {
+      const open = panel.hidden;
+      panel.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      if (open && !built) {
+        built = true;
+        fillCode(panel);
+      }
+    });
+    return ui.el('div', { class: 'list' }, toggle, ui.el('div', { class: 'cm-code-wrap' }, panel));
+  }
+
+  function fillCode(panel) {
     const codeBox = ui.el('input', { class: 'input cm-code', id: 'cm-my-code', readonly: 'readonly', value: 'Loading…', 'aria-label': 'Your friend code' });
     const qrBox = ui.el('div', { class: 'cm-qr-box' });
     const copy = ui.el('button', { type: 'button', class: 'btn btn-sm btn-ghost', disabled: true }, ui.icon('copy', { size: 18 }), 'Copy');
     const share = navigator.share ? ui.el('button', { type: 'button', class: 'btn btn-sm btn-ghost', disabled: true }, ui.icon('share', { size: 18 }), 'Share') : null;
+    panel.append(qrBox, codeBox, ui.el('div', { class: 'cluster' }, copy, share));
     nostr.start().then(() => {
       const npub = nostr.npub();
       codeBox.value = npub;
@@ -146,18 +181,11 @@ export function createCrewPanel(ctx, { nostr, friends, chat, location, roads }) 
     }).catch(() => {
       codeBox.value = 'Unavailable right now. Reload to try again.';
     });
-    return ui.el(
-      'div',
-      { class: 'card stack' },
-      ui.el('label', { class: 'field', for: 'cm-my-name' }, ui.el('span', { text: 'Your name (friends see this)' }), nameInput),
-      ui.el('label', { class: 'field', for: 'cm-my-code' }, ui.el('span', { text: 'Your friend code' }), codeBox),
-      ui.el('div', { class: 'cluster' }, copy, share),
-      qrBox,
-    );
   }
 
-  function renderRoads() {
-    if (!parts) return;
+  function renderRoads(target = privacyRoads) {
+    if (!target) return;
+    const parts = { roads: target };
     ui.clear(parts.roads);
     const threshold = config.ROAD_CONSENSUS_USERS;
     parts.roads.append(ui.el('p', { class: 'small muted', text: `When ${threshold} different drivers drive the same road that isn’t on the map, it’s added for everyone.` }));
@@ -191,21 +219,18 @@ export function createCrewPanel(ctx, { nostr, friends, chat, location, roads }) 
     parts = {
       status: ui.el('p', { class: 'small cm-status', 'aria-live': 'polite' }),
       friends: ui.el('div', { class: 'stack cm-friends' }),
-      roads: ui.el('div', { class: 'stack' }),
     };
     body.append(
       parts.status,
-      ui.el('h3', { class: 'section-title', text: 'Your crew' }),
-      parts.friends,
+      ui.el('h3', { class: 'section-title', text: 'You' }),
+      nameCard(),
+      codeCard(),
       ui.el('h3', { class: 'section-title', text: 'Add a friend' }),
       addFriendForm(),
-      ui.el('h3', { class: 'section-title', text: 'Your friend code' }),
-      myCodeCard(),
-      ui.el('h3', { class: 'section-title', text: 'Road changes' }),
-      parts.roads,
+      ui.el('h3', { class: 'section-title', text: 'Your crew' }),
+      parts.friends,
     );
     renderFriends();
-    renderRoads();
   }
 
   function render(body, api) {
@@ -241,7 +266,12 @@ export function createCrewPanel(ctx, { nostr, friends, chat, location, roads }) 
   return Object.freeze({
     open,
     refreshFriends: () => isOpen() && renderFriends(),
-    refreshRoads: () => isOpen() && renderRoads(),
+    refreshRoads: () => renderRoads(),
+    /** Fill a container (Settings → Privacy) with the road-changes summary and keep it updated. */
+    renderRoadsInto(container) {
+      privacyRoads = container;
+      renderRoads(container);
+    },
     refreshThread(pubkey) {
       if (!isOpen()) return;
       if (thread && view.pubkey === pubkey) thread.update();

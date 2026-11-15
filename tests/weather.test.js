@@ -47,3 +47,15 @@ test('parseRadarIndex keeps valid frames, newest last, and rejects bad hosts', (
   assert.equal(parseRadarIndex({ ...idx, host: 'javascript:alert(1)' }), null);
   assert.equal(parseRadarIndex({ host: idx.host, radar: { past: [{ time: 1, path: '"><img>' }] } }), null);
 });
+
+import { normaliseView } from '../app/js/map/viewModes.js';
+
+test('normaliseView: one base plus add-ons, terrain only on Standard, old settings migrate', () => {
+  assert.deepEqual(normaliseView({}), { mapBase: 'standard', mapTerrain: false, mapWeather: false });
+  assert.deepEqual(normaliseView({ mapBase: 'standard', mapTerrain: true, mapWeather: true }), { mapBase: 'standard', mapTerrain: true, mapWeather: true });
+  assert.deepEqual(normaliseView({ mapBase: 'satellite', mapTerrain: true, mapWeather: true }), { mapBase: 'satellite', mapTerrain: false, mapWeather: true });
+  assert.deepEqual(normaliseView({ mapView: 'terrain' }), { mapBase: 'standard', mapTerrain: true, mapWeather: false });
+  assert.deepEqual(normaliseView({ mapView: 'satellite' }), { mapBase: 'satellite', mapTerrain: false, mapWeather: false });
+  assert.deepEqual(normaliseView({ mapView: 'weather' }), { mapBase: 'standard', mapTerrain: false, mapWeather: true });
+  assert.equal(normaliseView({ mapBase: 'moon' }).mapBase, 'standard');
+});

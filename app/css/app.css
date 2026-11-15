@@ -344,3 +344,4 @@ button.row:hover { background: var(--surface-3); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+.row-toggle.is-disabled { opacity: 0.5; cursor: not-allowed; }

@@ -25,8 +25,9 @@ test('TRAFFIC sections become congestion segments', () => {
   assert.deepEqual(r.congestion.map((c) => c.level), ['slow', 'closed', 'heavy']);
   assert.equal(r.congestion[0].coords.length, 3); // points 3..5
   assert.deepEqual(r.congestion[1].coords[0], r.geometry[6]);
-  assert.equal(trafficLevel({ magnitudeOfDelay: 1 }), 'slow');
-  assert.equal(trafficLevel({ magnitudeOfDelay: 0 }), 'slow');
+  assert.equal(trafficLevel({ magnitudeOfDelay: 1 }), 'free');
+  assert.equal(trafficLevel({ magnitudeOfDelay: 0 }), 'free');
+  assert.equal(trafficLevel({ magnitudeOfDelay: 2 }), 'slow');
   assert.equal(trafficLevel({ magnitudeOfDelay: 3 }), 'heavy');
   assert.equal(trafficLevel({ magnitudeOfDelay: 4 }), 'closed');
   assert.equal(trafficLevel({ simpleCategory: 'ROAD_CLOSURE', magnitudeOfDelay: 1 }), 'closed');

@@ -29,6 +29,34 @@ function initHazards(ctx, nostr) {
   });
 }
 
+/** Ghost mode switch: a ghost that lights up when you're invisible and greys out when you're not. */
+function ghostButton({ ui, store }) {
+  const title = ui.el('span', { class: 'row-title' });
+  const hint = ui.el('span', { class: 'row-hint' });
+  const btn = ui.el(
+    'button',
+    { type: 'button', class: 'cm-ghost', id: 'set-ghost' },
+    ui.el('span', { class: 'cm-ghost-icon' }, ui.icon('ghost', { size: 30 })),
+    ui.el('span', { class: 'row-text' }, title, hint),
+  );
+  const paint = () => {
+    const on = store.get().settings.ghostMode === true;
+    btn.setAttribute('aria-pressed', String(on));
+    btn.dataset.on = String(on);
+    title.textContent = on ? 'Ghost mode is on' : 'Ghost mode is off';
+    hint.textContent = on
+      ? 'You’re invisible. Nobody can see your location, and your drives aren’t used for road changes.'
+      : 'Tap to go invisible. Friends you share with can see you now.';
+  };
+  btn.addEventListener('click', () => {
+    store.set((s) => ({ settings: { ...s.settings, ghostMode: s.settings.ghostMode !== true } }));
+    paint();
+    ui.toast(store.get().settings.ghostMode ? 'Ghost mode on: you’re invisible' : 'Ghost mode off', { tone: 'good' });
+  });
+  paint();
+  return btn;
+}
+
 function initCrew(ctx, nostr, getRoads) {
   const { ui, bus, actions, storage, store } = ctx;
   const friends = createFriends({ storage, nostr, store });
@@ -65,6 +93,16 @@ function initCrew(ctx, nostr, getRoads) {
   nostr.onStatus(() => crew.refreshFriends());
 
   ui.addDockItem({ id: 'crew', icon: 'users', label: 'Crew', order: 30, onClick: () => crew.open() });
+  ui.registerSettingsSection({
+    id: 'privacy', title: 'Privacy', order: 25,
+    render(c) {
+      const roadsBox = ui.el('div', { class: 'stack' });
+      c.append(ghostButton(ctx), ui.el('p', { class: 'section-title', text: 'Road changes' }), roadsBox);
+      crew.renderRoadsInto(roadsBox);
+    },
+  });
+  store.select((s) => s.settings.ghostMode === true, () => crew.refreshFriends());
+  actions.register('setGhostMode', (on) => store.set((s) => ({ settings: { ...s.settings, ghostMode: !!on } })));
   safe('location', () => location.init());
   actions.register('sendMessage', (friendName, text) => chat.sendMessage(friendName, text));
   actions.register('listFriends', () => publicFriends());

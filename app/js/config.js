@@ -69,10 +69,12 @@ export const DEFAULT_SETTINGS = Object.freeze({
   theme: 'auto', // auto (day/night by sun) | system | light | dark
   buildings3d: true,
   view3d: true, // tilted chase view; false = flat top-down map
-  mapView: 'standard', // standard | satellite | terrain | weather
-  traffic: true, // live traffic colours (needs TOMTOM_KEY)
+  mapBase: 'standard', // standard | satellite
+  mapTerrain: false, // hillshade add-on (Standard only)
+  mapWeather: false, // rain radar + conditions add-on
   showDrivenRoads: true,
   car3d: true,
+  ghostMode: false, // invisible: live location goes to nobody, drives aren't recorded for road changes
 });
 
 /** Hazard types users can report. `ttlMin` = minutes before a report fades unless re-confirmed. */

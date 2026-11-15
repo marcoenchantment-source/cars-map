@@ -69,7 +69,7 @@ export function createRoadwatch(ctx, nostr, { onChange }) {
   }
 
   function onFix(fix) {
-    if (simActive || fix.simulated || !isLngLat([fix.lng, fix.lat])) {
+    if (simActive || fix.simulated || ctx.store.get().settings.ghostMode === true || !isLngLat([fix.lng, fix.lat])) {
       reset();
       return;
     }

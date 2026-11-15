@@ -1,13 +1,25 @@
-// Map views: Standard, Satellite (Esri imagery under our roads and labels), Terrain (hillshade
-// from open elevation data) and Weather (standard map + radar, see weather.js).
+// Map views: one base (Standard, or Satellite = Esri imagery under our roads and labels) plus
+// add-ons: Terrain (hillshade, Standard only) and Weather (radar + conditions, see weather.js).
 import { applyTheme } from './style.js';
 
-export const MAP_VIEWS = Object.freeze([
+export const MAP_BASES = Object.freeze([
   { value: 'standard', label: 'Standard' },
   { value: 'satellite', label: 'Satellite' },
-  { value: 'terrain', label: 'Terrain' },
-  { value: 'weather', label: 'Weather' },
 ]);
+
+/**
+ * Settings → a valid view. Terrain only goes with Standard. Older builds stored a single
+ * `mapView` ('standard' | 'satellite' | 'terrain' | 'weather'); it's translated here.
+ * @returns {{mapBase: 'standard'|'satellite', mapTerrain: boolean, mapWeather: boolean}}
+ */
+export function normaliseView(settings = {}) {
+  const legacy = settings.mapView;
+  let base = settings.mapBase ?? (legacy === 'satellite' ? 'satellite' : 'standard');
+  if (base !== 'satellite') base = 'standard';
+  const terrain = (settings.mapTerrain ?? legacy === 'terrain') === true && base === 'standard';
+  const weather = (settings.mapWeather ?? legacy === 'weather') === true;
+  return { mapBase: base, mapTerrain: terrain, mapWeather: weather };
+}
 
 const SAT = 'cm-sat';
 const DEM = 'cm-dem';
@@ -72,9 +84,10 @@ function styleForSatellite(map, on) {
 }
 
 /** Apply a view to the map. Safe to call repeatedly (e.g. after a theme or building change). */
-export function applyMapView(map, view, { theme, buildings3d, endpoints }) {
-  const satellite = view === 'satellite';
-  const terrain = view === 'terrain';
+export function applyMapView(map, settings, { theme, buildings3d, endpoints }) {
+  const v = normaliseView(settings);
+  const satellite = v.mapBase === 'satellite';
+  const terrain = v.mapTerrain;
   if (satellite) addSatellite(map, endpoints.satellite);
   else removeLayerAndSource(map, SAT);
   if (terrain) {
@@ -93,7 +106,7 @@ export function initViewModes(ctx) {
   const apply = () => {
     const { settings, theme } = store.get();
     try {
-      applyMapView(map, settings.mapView, { theme, buildings3d: settings.buildings3d, endpoints: config.ENDPOINTS });
+      applyMapView(map, settings, { theme, buildings3d: settings.buildings3d, endpoints: config.ENDPOINTS });
     } catch (err) {
       if (/not done loading/i.test(err?.message ?? '')) {
         map.once('idle', apply); // style still loading: try again once it settles
@@ -101,13 +114,13 @@ export function initViewModes(ctx) {
       }
       console.error('[map] view change failed', err);
       ui.toast('That map view could not load. Showing the standard map.', { tone: 'warn' });
-      store.set((s) => ({ settings: { ...s.settings, mapView: 'standard' } }));
+      store.set((s) => ({ settings: { ...s.settings, mapBase: 'standard', mapTerrain: false } }));
     }
   };
   mapView.ready.then(() => {
     apply();
     // Re-apply after anything that repaints or re-adds basemap layers.
-    store.select((s) => `${s.settings.mapView}|${s.theme}|${s.settings.buildings3d}`, () => setTimeout(apply, 0));
+    store.select((s) => `${s.settings.mapBase}|${s.settings.mapTerrain}|${s.theme}|${s.settings.buildings3d}`, () => setTimeout(apply, 0));
   });
   map.on('error', (e) => {
     if ((e?.sourceId === SAT || e?.sourceId === DEM) && !initViewModes.warned) {

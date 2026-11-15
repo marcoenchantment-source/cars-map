@@ -54,7 +54,7 @@ export function initWeather(ctx) {
   });
   document.querySelector('.hud-top')?.append(card.root);
 
-  const active = () => store.get().settings.mapView === 'weather';
+  const active = () => store.get().settings.mapWeather === true;
 
   // ---------------------------------------------------------------- radar
   function clearRadar() {
@@ -208,7 +208,7 @@ export function initWeather(ctx) {
 
   mapView.ready.then(() => {
     sync();
-    store.select((s) => s.settings.mapView, () => setTimeout(sync, 0));
+    store.select((s) => s.settings.mapWeather, () => setTimeout(sync, 0));
     // Theme/building changes re-add basemap layers; put the radar back on top of them.
     store.select((s) => `${s.theme}|${s.settings.buildings3d}`, () => active() && setTimeout(loadRadar, 50));
   });

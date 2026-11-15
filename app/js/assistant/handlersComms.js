@@ -125,7 +125,7 @@ export async function garage(slots, env) {
 
 const PANELS = {
   race: { action: 'openRace', text: 'Opening track day.', name: 'Track day' },
-  trips: { action: 'openTrips', text: 'Opening your logbook.', name: 'The logbook' },
+  trips: { action: 'openTrips', text: 'Opening your trips.', name: 'Your trips' },
   settings: { action: 'openSettings', text: 'Opening Settings.', name: 'Settings' },
 };
 

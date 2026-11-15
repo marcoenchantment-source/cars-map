@@ -1,44 +1,44 @@
-// "Map" panel (layers button): look, 3D buildings, live traffic, driven roads.
-// Also owns the optional TomTom live-traffic overlay.
-import { ROUTE_BEFORE_ID } from './style.js';
-import { MAP_VIEWS } from './viewModes.js';
+// "Map" panel (layers button): base view (Standard / Satellite) with Terrain and Weather add-ons,
+// the look, 3D buildings and driven roads. Live traffic is not drawn over the whole map: it shows
+// only along the chosen route (medium and heavy), drawn by routeLayer from the route's congestion.
+import { MAP_BASES } from './viewModes.js';
 
-const TRAFFIC_SOURCE = 'cm-traffic';
-const TRAFFIC_LAYER = 'cm-traffic';
+export function initMapOptions(view, { store, bus, ui }) {
+  const setSettings = (patch) => store.set((s) => ({ settings: { ...s.settings, ...patch } }));
 
-function trafficTiles(base, key, theme) {
-  const style = theme === 'dark' ? 'relative0-dark' : 'relative0';
-  return `${base}/traffic/map/4/tile/flow/${style}/{z}/{x}/{y}.png?key=${encodeURIComponent(key)}&tileSize=256`;
-}
-
-export function initMapOptions(view, { store, bus, ui, config }) {
-  const { map, ready } = view;
-
-  function syncTraffic() {
-    const { settings, theme } = store.get();
-    const want = Boolean(settings.traffic && settings.tomtomKey);
-    if (map.getLayer(TRAFFIC_LAYER)) map.removeLayer(TRAFFIC_LAYER);
-    if (map.getSource(TRAFFIC_SOURCE)) map.removeSource(TRAFFIC_SOURCE);
-    if (!want) return;
-    map.addSource(TRAFFIC_SOURCE, {
-      type: 'raster',
-      tiles: [trafficTiles(config.ENDPOINTS.tomtom, settings.tomtomKey, theme)],
-      tileSize: 256,
-      attribution: 'Traffic © TomTom',
+  function viewControls(settings) {
+    const satellite = settings.mapBase === 'satellite';
+    const terrainRow = ui.toggleRow({
+      id: 'opt-terrain', label: 'Terrain', hint: satellite ? 'Works with the Standard map' : 'Shaded hills and valleys',
+      checked: !satellite && settings.mapTerrain === true,
+      onChange: (v) => setSettings({ mapTerrain: v }),
     });
-    const before = map.getLayer('cm-routes-alt-casing') ? 'cm-routes-alt-casing' : ROUTE_BEFORE_ID;
-    map.addLayer({ id: TRAFFIC_LAYER, type: 'raster', source: TRAFFIC_SOURCE, paint: { 'raster-opacity': 0.9 } }, before);
+    const terrainInput = terrainRow.querySelector('input');
+    if (terrainInput) terrainInput.disabled = satellite;
+    terrainRow.classList.toggle('is-disabled', satellite);
+    return [
+      ui.segmented({
+        id: 'map-base',
+        label: 'Map view',
+        value: satellite ? 'satellite' : 'standard',
+        options: MAP_BASES,
+        onChange: (v) => {
+          setSettings(v === 'satellite' ? { mapBase: 'satellite', mapTerrain: false } : { mapBase: 'standard' });
+          openPanel(); // redraw so Terrain enables/disables
+        },
+      }),
+      ui.el(
+        'div',
+        { class: 'list' },
+        terrainRow,
+        ui.toggleRow({
+          id: 'opt-weather', label: 'Weather', hint: 'Live rain radar and conditions. Tap the map to check anywhere.',
+          checked: settings.mapWeather === true,
+          onChange: (v) => setSettings({ mapWeather: v }),
+        }),
+      ),
+    ];
   }
-  ready.then(syncTraffic);
-  store.select((s) => `${s.settings.traffic}|${s.settings.tomtomKey}|${s.theme}`, () => ready.then(syncTraffic));
-  map.on('error', (e) => {
-    if (e?.sourceId === TRAFFIC_SOURCE && !syncTraffic.warned) {
-      syncTraffic.warned = true;
-      ui.toast('Live traffic could not load right now.', { tone: 'warn', ms: 5000 });
-    }
-  });
-
-  const setSetting = (key, value) => store.set((s) => ({ settings: { ...s.settings, [key]: value } }));
 
   function openPanel() {
     ui.sheet.open({
@@ -48,14 +48,7 @@ export function initMapOptions(view, { store, bus, ui, config }) {
         const { settings } = store.get();
         body.append(
           ui.el('p', { class: 'section-title', text: 'View' }),
-          ui.segmented({
-            id: 'map-view',
-            label: 'Map view',
-            value: settings.mapView ?? 'standard',
-            options: MAP_VIEWS,
-            onChange: (v) => setSetting('mapView', v),
-          }),
-          ui.el('p', { class: 'small muted', text: 'Weather shows live rain radar and conditions. Tap anywhere on the map to check there.' }),
+          ...viewControls(settings),
           ui.el('p', { class: 'section-title', text: 'Look' }),
           ui.segmented({
             id: 'map-theme',
@@ -67,32 +60,21 @@ export function initMapOptions(view, { store, bus, ui, config }) {
               { value: 'dark', label: 'Night' },
               { value: 'system', label: 'Phone setting' },
             ],
-            onChange: (v) => setSetting('theme', v),
+            onChange: (v) => setSettings({ theme: v }),
           }),
           ui.el(
             'div',
             { class: 'list' },
             ui.toggleRow({
               id: 'opt-buildings', label: '3D buildings', hint: 'City blocks rise as you zoom in',
-              checked: settings.buildings3d, onChange: (v) => setSetting('buildings3d', v),
-            }),
-            ui.toggleRow({
-              id: 'opt-traffic', label: 'Live traffic',
-              hint: settings.tomtomKey ? 'Road colours show live speeds' : 'Not available yet',
-              checked: settings.traffic && !!settings.tomtomKey,
-              onChange: (v) => {
-                if (v && !store.get().settings.tomtomKey) {
-                  ui.toast('Live traffic isn’t available yet', { tone: 'warn' });
-                  return;
-                }
-                setSetting('traffic', v);
-              },
+              checked: settings.buildings3d, onChange: (v) => setSettings({ buildings3d: v }),
             }),
             ui.toggleRow({
               id: 'opt-driven', label: 'Roads I have driven', hint: 'A glowing trail over every road you have used',
-              checked: settings.showDrivenRoads, onChange: (v) => setSetting('showDrivenRoads', v),
+              checked: settings.showDrivenRoads, onChange: (v) => setSettings({ showDrivenRoads: v }),
             }),
           ),
+          ui.el('p', { class: 'small muted', text: 'Live traffic shows on your route once you pick a destination: amber for slow, red for heavy.' }),
         );
       },
     });
