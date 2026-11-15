@@ -4,6 +4,7 @@ import { formatLap, formatDelta } from './laps.js';
 import { twoTapButton } from './panel.js';
 import { lapStats } from './tracksModel.js';
 import { loadWorldTracks, findTracks } from './worldTracks.js';
+import { renderGroupSection } from './groupSheet.js';
 
 const SHEET_ID = 'race';
 
@@ -83,6 +84,12 @@ export function createRaceSheet(ctx, handlers) {
     const tracks = handlers.tracks();
     if (selectedId && !tracks.some((t) => t.id === selectedId)) selectedId = tracks[0]?.id ?? null;
     body.append(safety());
+    const group = handlers.group?.();
+    if (group) {
+      const box = ui.el('div', { class: 'stack' });
+      body.append(ui.el('p', { class: 'section-title', text: 'Race group' }), box);
+      renderGroupSection(box, group, ctx);
+    }
     if (tracks.length) {
       body.append(ui.el('p', { class: 'section-title', text: 'Your tracks' }), ui.el('div', { class: 'list' }, tracks.map((t) => trackRow(t, rerender, body))));
     } else {

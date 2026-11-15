@@ -107,6 +107,7 @@ function initCrew(ctx, nostr, getRoads) {
   actions.register('sendMessage', (friendName, text) => chat.sendMessage(friendName, text));
   actions.register('listFriends', () => publicFriends());
   actions.register('sendCrewMessage', (pubkey, text) => chat.send(pubkey, text));
+  actions.register('myName', () => friends.myName());
   actions.register('openCrew', () => crew.open());
   return { chat, location, crew };
 }
@@ -114,6 +115,7 @@ function initCrew(ctx, nostr, getRoads) {
 export async function init(ctx) {
   const { storage, config } = ctx;
   const nostr = createNostr({ storage, relays: [...config.NOSTR_RELAYS] });
+  ctx.actions.register('nostrClient', () => nostr); // race groups share the same relays and identity
   let roads = null;
 
   initHazards(ctx, nostr);

@@ -6,6 +6,8 @@ import { startRaceSession } from './session.js';
 import { startRecordSession } from './recordSession.js';
 import { createRaceSheet } from './sheet.js';
 import { demoCircuit } from './demo.js';
+import { createGroupLink } from './groupLink.js';
+import { initCountdown } from './countdown.js';
 
 const TRACKS_KEY = 'tracks';
 
@@ -29,6 +31,14 @@ export async function init(ctx) {
   const tracks = createTracksStore(ctx.storage);
   let layer = null;
   let session = null; // race or record session, one at a time
+  let group = null;
+  try {
+    const nostr = actions.has('nostrClient') ? await actions.call('nostrClient') : null;
+    if (nostr) group = createGroupLink(ctx, { nostr, myName: () => actions.call('myName') });
+  } catch (err) {
+    console.warn('[race] race groups unavailable', err?.message);
+  }
+  initCountdown(ctx);
 
   const ensureLayer = async () => {
     if (!layer) layer = createTrackLayer(await ctx.mapView.ready);
@@ -55,12 +65,17 @@ export async function init(ctx) {
         track, layer: l, demo,
         onRecord: (t, lap) => {
           const current = tracks.get(t.id);
-          if (current) tracks.upsert(withLap(current, lap.time, lap.endedAt));
+          if (!current) return;
+          const next = withLap(current, lap.time, lap.endedAt);
+          tracks.upsert(next);
+          group?.setLap({ laps: next.laps.length, best: next.bestLap });
         },
         onEnd: () => {
           session = null;
+          group?.setRacing(null);
         },
       });
+      if (!demo) group?.setRacing({ trackId: track.id, trackName: track.name, best: track.bestLap });
     } catch (err) {
       session = null;
       console.error('[race] could not start the session', err);
@@ -112,6 +127,7 @@ export async function init(ctx) {
 
   const sheet = createRaceSheet(ctx, {
     tracks: () => tracks.list(),
+    group: () => group,
     onWorldRace: (w) => race(adopt(w)),
     onWorldDemo: (w) => race(adopt(w), { demo: true }),
     onRace: (t) => race(t),

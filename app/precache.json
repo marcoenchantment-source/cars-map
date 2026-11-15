@@ -1,5 +1,5 @@
 {
- "version": "d126ac590d6a",
+ "version": "ac14024f1e01",
  "files": [
   "./",
   "./css/app.css",
@@ -87,7 +87,11 @@
   "./js/nav/trip.js",
   "./js/nav/voice.js",
   "./js/nav/wakelock.js",
+  "./js/race/countdown.js",
   "./js/race/demo.js",
+  "./js/race/groupLink.js",
+  "./js/race/groupModel.js",
+  "./js/race/groupSheet.js",
   "./js/race/index.js",
   "./js/race/laps.js",
   "./js/race/panel.js",

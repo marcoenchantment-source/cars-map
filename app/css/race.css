@@ -84,3 +84,32 @@
 .race-lap-delta { font-weight: 700; color: var(--bad); min-width: 56px; text-align: right; }
 .race-lap.is-best .race-lap-delta { color: var(--accent-strong); }
 .race-lap-time { font-size: 18px; color: var(--ink); min-width: 72px; text-align: right; }
+
+/* Race groups */
+.rg-card { gap: 10px; }
+.rg-name { font: 800 20px/1.1 var(--font-display); }
+.rg-ghost { margin: 0; padding: 8px 10px; border-radius: var(--r-sm); background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; }
+.rg-swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.rg-swatch {
+  width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--surface); padding: 0; cursor: pointer;
+  box-shadow: 0 0 0 1.5px var(--line); transition: transform 0.15s, box-shadow 0.15s;
+}
+.rg-swatch[aria-checked="true"] { box-shadow: 0 0 0 3px var(--accent); transform: scale(1.08); }
+.rg-swatch:disabled { opacity: 0.25; cursor: not-allowed; }
+.rg-dot { width: 18px; height: 18px; border-radius: 50%; flex: none; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--line); }
+.rg-member { cursor: default; }
+.rg-code-text { font-size: 12px; }
+.rg-qr { align-self: center; }
+
+/* Shared race-start countdown */
+.rc {
+  position: absolute; inset: 0; z-index: 55; display: grid; place-content: center; justify-items: center; gap: 6px; text-align: center;
+  background: radial-gradient(110% 80% at 50% 40%, rgb(123 77 255 / 0.55), rgb(13 11 20 / 0.9)); color: #fff;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+}
+.rc-label { margin: 0; font: 700 16px/1 var(--font-body); letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.85; }
+.rc-num { font-size: clamp(110px, 38vw, 220px); font-weight: 800; line-height: 1; }
+.rc.is-go { background: radial-gradient(110% 80% at 50% 40%, rgb(46 158 91 / 0.75), rgb(13 11 20 / 0.9)); }
+.rc.is-go .rc-num { color: var(--flame-2); }
+.rc-sub { margin: 0; font-weight: 600; opacity: 0.9; }
+.rc-hide { margin-top: 18px; background: rgb(255 255 255 / 0.12); color: #fff; box-shadow: none; }
