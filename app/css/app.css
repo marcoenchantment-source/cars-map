@@ -209,6 +209,9 @@ input, select, textarea { font: inherit; color: inherit; }
   padding: 8px max(20px, env(safe-area-inset-right, 0px)) 22px max(20px, env(safe-area-inset-left, 0px));
   display: flex; flex-direction: column; gap: 14px;
 }
+/* Panel content scrolls; it must never be squashed. Without this, boxes with overflow:hidden
+   (lists, cards) shrink to zero height when a panel is taller than the screen. */
+.sheet-body > *, .sheet-body .stack > * { flex-shrink: 0; }
 @media (min-width: 900px) {
   .sheet {
     top: 16px; bottom: 16px; left: 16px; right: auto; width: 420px; max-height: none; height: auto !important;
