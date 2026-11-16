@@ -6,7 +6,11 @@ import { DEFAULT_CAR } from '../config.js';
 export const RIMS = Object.freeze(['five', 'mesh', 'dish']);
 export const PATS = Object.freeze(['off', 'single', 'double', 'triple']);
 export const INTS = Object.freeze([1, 3, 5]);
-export const BODIES = Object.freeze(['coupe', 'ute', 'hatch']);
+export const CAR_BODIES = Object.freeze(['coupe', 'ute', 'hatch']);
+export const BIKES = Object.freeze(['sport', 'cruiser']);
+export const BODIES = Object.freeze([...CAR_BODIES, ...BIKES]);
+/** Motorcycles share paint, rims and flames with the cars but have their own art and 3D model. */
+export const isBike = (body) => BIKES.includes(body);
 export const NAME_MAX = 20;
 export const LABEL_MAX = 24;
 

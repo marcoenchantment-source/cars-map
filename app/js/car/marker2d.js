@@ -1,7 +1,8 @@
 // Fallback "me" car: a top-down car drawn flat on the map (rotates and tilts with it),
 // painted in the driver's colour, with flames that pop out of the exhausts.
 // Used when the 3D car is off in Settings or WebGL 2 / three.js is not available.
-import { normaliseLook } from './flames.js';
+import { normaliseLook, isBike } from './flames.js';
+import { topBikeArt, BIKE_TOP_EXHAUST } from './bikeArt.js';
 import { svgEl, restartPop } from './car2d.js';
 
 // viewBox 40 x 92: the car (y 12..80) is centred so the marker's centre is the car's centre.
@@ -31,18 +32,24 @@ function cabin(body, paint) {
   ];
 }
 
-function flames() {
+/** Exhaust flames pointing backwards from y0 (the car's two pipes by default). */
+function flames(xs = [14, 26], y0 = 80) {
   const one = (x) => svgEl('g', { class: 'car-flame car-flame-top' }, [
-    svgEl('polygon', { points: `${x - 3},80 ${x + 3},80 ${x + 2},86 ${x + 4},88 ${x},92 ${x - 4},88 ${x - 2},86`, fill: '#ff8a00' }),
-    svgEl('polygon', { points: `${x - 1.6},80 ${x + 1.6},80 ${x + 1},85 ${x},88 ${x - 1},85`, fill: '#ffe14d' }),
+    svgEl('polygon', { points: `${x - 3},${y0} ${x + 3},${y0} ${x + 2},${y0 + 6} ${x + 4},${y0 + 8} ${x},${y0 + 12} ${x - 4},${y0 + 8} ${x - 2},${y0 + 6}`, fill: '#ff8a00' }),
+    svgEl('polygon', { points: `${x - 1.6},${y0} ${x + 1.6},${y0} ${x + 1},${y0 + 5} ${x},${y0 + 8} ${x - 1},${y0 + 5}`, fill: '#ffe14d' }),
   ]);
-  return [one(14), one(26)];
+  return xs.map(one);
 }
 
 /** Top-down car SVG for a validated look. */
 export function topCarArt(look) {
   const paint = look.color;
-  return svgEl('svg', { class: 'car-top', viewBox: '0 0 40 92', width: 40, height: 92, 'aria-hidden': 'true', focusable: 'false' }, [
+  const frame = { class: 'car-top', viewBox: '0 0 40 92', width: 40, height: 92, 'aria-hidden': 'true', focusable: 'false' };
+  if (isBike(look.body)) {
+    const ex = BIKE_TOP_EXHAUST[look.body] ?? BIKE_TOP_EXHAUST.sport;
+    return svgEl('svg', frame, [...flames(ex.xs, ex.y), ...topBikeArt(look)]);
+  }
+  return svgEl('svg', frame, [
     ...flames(),
     ...tyres(),
     svgEl('path', { d: BODY, fill: paint }),

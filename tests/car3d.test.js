@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import * as THREE from '../app/vendor/three/three.module.js';
 import { buildCarModel, BASE_LENGTH } from '../app/js/car/car3dModel.js';
 import { applyMatrices } from '../app/js/car/car3d.js';
-import { RIMS, BODIES, flameFrame } from '../app/js/car/flames.js';
+import { RIMS, BODIES, BIKES, flameFrame, normaliseLook } from '../app/js/car/flames.js';
+import { sanitizeCar } from '../app/js/social/sanitize.js';
 
 // Minimal stand-in for maplibregl.MercatorCoordinate (web mercator, 0..1, y down).
 globalThis.maplibregl = {
@@ -33,15 +34,21 @@ test('every body and rim builds a car with geometry and disposes cleanly', () =>
           assert.equal(o.frustumCulled, false);
         }
       });
-      assert.ok(meshes > 15, `${body}/${rim} has ${meshes} meshes`);
+      const bike = BIKES.includes(body);
+      assert.ok(meshes > (bike ? 12 : 15), `${body}/${rim} has ${meshes} meshes`);
       model.group.updateMatrixWorld(true);
       const box = new THREE.Box3();
       model.group.traverse((o) => {
         if (o.isMesh && !o.material.transparent) box.expandByObject(o); // body, wheels, lights
       });
       const size = box.getSize(new THREE.Vector3());
-      assert.ok(Math.abs(size.z - BASE_LENGTH) < 0.3, `${body} length ${size.z}`);
-      assert.ok(size.x > 1.6 && size.x < 2.6, `${body} width ${size.x}`);
+      if (bike) {
+        assert.ok(size.z > 3.2 && size.z < 4.6, `${body} length ${size.z}`);
+        assert.ok(size.x > 0.5 && size.x < 1.2, `${body} width ${size.x}`);
+      } else {
+        assert.ok(Math.abs(size.z - BASE_LENGTH) < 0.3, `${body} length ${size.z}`);
+        assert.ok(size.x > 1.6 && size.x < 2.6, `${body} width ${size.x}`);
+      }
       assert.ok(box.min.y > -0.01 && box.max.y < 2, `${body} height ${box.max.y}`);
       model.setPaint('#00ff00');
       model.setSpin(1.2);
@@ -104,4 +111,28 @@ test('projection/view split reproduces the full matrix exactly', () => {
   const whole = camera.projectionMatrix.clone();
   split.elements.forEach((v, i) => assert.ok(Math.abs(v - whole.elements[i]) <= 1e-6 * Math.max(1, Math.abs(v)), `element ${i}`));
   assert.ok(new THREE.Matrix4().copy(camera.matrixWorldInverse).determinant() === 1);
+});
+
+test('bikes ride on the centre line with flames out of the pipes at the back', () => {
+  for (const [body, pipes] of [['sport', 1], ['cruiser', 2]]) {
+    const model = buildCarModel({ color: '#ff4fa3', rim: 'mesh', body }, textures);
+    const flames = [];
+    model.group.traverse((o) => {
+      if (o.isGroup && o.children.length === 2 && o.children.every((c) => c.material?.blending === THREE.AdditiveBlending)) flames.push(o);
+    });
+    assert.equal(flames.length, pipes, `${body} flames`);
+    for (const f of flames) assert.ok(f.position.z > 1, `${body} flame z ${f.position.z}`);
+    const wheels = [];
+    model.group.traverse((o) => o.isGroup && o.position.y > 0.3 && o.position.y < 0.45 && wheels.push(o));
+    assert.ok(wheels.length >= 2 && wheels.every((w) => w.position.x === 0), `${body} wheels on the centre line`);
+    model.dispose();
+  }
+});
+
+test('bike looks survive validation in the garage and when shared with friends', () => {
+  for (const body of BIKES) {
+    assert.equal(normaliseLook({ body }).body, body);
+    assert.equal(sanitizeCar({ body }).body, body);
+  }
+  assert.equal(normaliseLook({ body: 'tank' }).body, 'coupe');
 });

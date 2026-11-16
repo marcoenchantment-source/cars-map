@@ -1,5 +1,5 @@
 {
- "version": "86212cbc10f3",
+ "version": "f5296f8442f6",
  "files": [
   "./",
   "./css/app.css",
@@ -32,6 +32,8 @@
   "./js/assistant/reply.js",
   "./js/assistant/tools.js",
   "./js/assistant/vocab.js",
+  "./js/car/bike3dModel.js",
+  "./js/car/bikeArt.js",
   "./js/car/car2d.js",
   "./js/car/car3d.js",
   "./js/car/car3dModel.js",

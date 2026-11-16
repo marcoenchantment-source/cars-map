@@ -1,7 +1,8 @@
 // The owner's side-view car from the prototype, rebuilt with createElementNS (no innerHTML):
 // same body path, glass, headlight, rims (5 spoke / mesh / deep dish) and flame polygons,
 // plus ute and hatch silhouettes drawn in the same style.
-import { normaliseLook } from './flames.js';
+import { normaliseLook, isBike } from './flames.js';
+import { sideBikeArt } from './bikeArt.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const VIEWBOX = '-20 0 140 56';
@@ -66,6 +67,7 @@ function flameArt() {
 
 /** The car drawing (body, glass, lights, wheels, flame) for a validated look. */
 export function sideCarArt(look) {
+  if (isBike(look.body)) return sideBikeArt(look, flameArt());
   const art = SIDE_ART[look.body] ?? SIDE_ART.coupe;
   const paint = look.color;
   const g = svgEl('g', { class: 'car-art' }, [

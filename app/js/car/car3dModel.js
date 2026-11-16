@@ -2,6 +2,8 @@
 // map car and the garage drawing share one silhouette. Frame: metres, x = right, y = up,
 // nose toward -Z (the layer rotates the whole car by the heading).
 import * as THREE from '../../vendor/three/three.module.js';
+import { isBike } from './flames.js';
+import { buildBikeModel } from './bike3dModel.js';
 
 const U = 0.04; // metres per prototype unit along the car
 const V = 0.034; // metres per prototype unit upward (a touch flatter than the cartoon)
@@ -279,6 +281,7 @@ export function radialTexture(inner, outer, size = 128) {
  * @param {{shadow: THREE.Texture, glow: THREE.Texture}} textures shared textures
  */
 export function buildCarModel(look, textures) {
+  if (isBike(look.body)) return buildBikeModel(look, textures);
   const art = PIECES[look.body] ?? PIECES.coupe;
   const mat = materials(look.color, textures);
   const group = new THREE.Group();
@@ -297,6 +300,11 @@ export function buildCarModel(look, textures) {
     o.frustumCulled = false; // the layer supplies a custom projection; never cull the car
   });
 
+  return modelApi({ group, look, mat, spinners, flames, glow });
+}
+
+/** The handle the 3D layer drives, shared by cars and bikes. */
+function modelApi({ group, look, mat, spinners, flames, glow }) {
   return {
     group,
     look: { ...look },
@@ -328,3 +336,6 @@ export function buildCarModel(look, textures) {
     },
   };
 }
+
+/** Building blocks shared with the motorcycle model (bike3dModel.js). */
+export const parts = Object.freeze({ toY, toZ, extrudeSide, rimGeometry, materials, flameCone, box, modelApi });

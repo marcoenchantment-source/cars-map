@@ -10,7 +10,7 @@ const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 const CAR_RIMS = Object.freeze(['five', 'mesh', 'dish']);
 const CAR_PATS = Object.freeze(['off', 'single', 'double', 'triple']);
 const CAR_INTS = Object.freeze([1, 3, 5]);
-const CAR_BODIES = Object.freeze(['coupe', 'ute', 'hatch']);
+const CAR_BODIES = Object.freeze(['coupe', 'ute', 'hatch', 'sport', 'cruiser']); // cars and bikes
 
 /**
  * Single-line display text: control characters removed, whitespace collapsed, trimmed and

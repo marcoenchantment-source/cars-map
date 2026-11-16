@@ -13,6 +13,8 @@ const BODY_OPTIONS = [
   { value: 'coupe', label: 'Coupe' },
   { value: 'ute', label: 'Ute' },
   { value: 'hatch', label: 'Hatch' },
+  { value: 'sport', label: 'Sport bike' },
+  { value: 'cruiser', label: 'Cruiser' },
 ];
 const PAT_OPTIONS = [
   { value: 'off', label: 'Off' },
@@ -159,7 +161,7 @@ function renderGarage(ctx, body, { setCarLook, revMapCar }) {
 
   const swatches = swatchGroup(ui, { onPick: (color) => setCarLook({ color }) });
   const rims = tileGroup(ui, { id: 'garage-rim', label: 'Rims', options: RIM_OPTIONS, art: (_, v) => rimArt(v), onChange: (rim) => setCarLook({ rim }) });
-  const bodies = tileGroup(ui, { id: 'garage-body', label: 'Body', options: BODY_OPTIONS, art: bodyArt, onChange: (b) => setCarLook({ body: b }) });
+  const bodies = tileGroup(ui, { id: 'garage-body', label: 'Car or bike', options: BODY_OPTIONS, art: bodyArt, onChange: (b) => setCarLook({ body: b }) });
   const pats = ui.segmented({ id: 'garage-pat', label: 'Flame pops', options: PAT_OPTIONS, value: look.pat, onChange: (pat) => setCarLook({ pat }) });
   const ints = ui.segmented({ id: 'garage-int', label: 'Pop every', options: INT_OPTIONS, value: look.int, onChange: (int) => setCarLook({ int }) });
 
@@ -189,7 +191,7 @@ function renderGarage(ctx, body, { setCarLook, revMapCar }) {
     ui.el('div', { class: 'garage-actions' }, spec, revBtn),
     paint.node,
     section(ui, 'Rims', rims.node).node,
-    section(ui, 'Body', bodies.node).node,
+    section(ui, 'Car or bike', bodies.node).node,
     section(ui, 'Flame pops', pats).node,
     section(ui, 'Every', ints).node,
     section(ui, 'Name on the map', ui.el('label', { class: 'field', for: 'garage-name' },
