@@ -113,3 +113,4 @@
 .rc.is-go .rc-num { color: var(--flame-2); }
 .rc-sub { margin: 0; font-weight: 600; opacity: 0.9; }
 .rc-hide { margin-top: 18px; background: rgb(255 255 255 / 0.12); color: #fff; box-shadow: none; }
+.race-preview-facts { margin: 0; color: var(--ink-2); font-size: 16px; font-weight: 600; }

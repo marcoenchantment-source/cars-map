@@ -2,7 +2,7 @@
 // timing and lap history, and a demo lap to try it at home.
 import { TRACK_LIMITS, capTracks, cleanTrackName, nextTrackName, removeTrack, sanitizeTracks, upsertTrack, withLap } from './tracksModel.js';
 import { createTrackLayer } from './trackLayer.js';
-import { startRaceSession } from './session.js';
+import { startRaceSession, fitTrack } from './session.js';
 import { startRecordSession } from './recordSession.js';
 import { createRaceSheet } from './sheet.js';
 import { demoCircuit } from './demo.js';
@@ -128,6 +128,18 @@ export async function init(ctx) {
   const sheet = createRaceSheet(ctx, {
     tracks: () => tracks.list(),
     group: () => group,
+    onPreview: async (t) => {
+      try {
+        const l = await ensureLayer();
+        l.showTrack(t);
+        fitTrack(ctx, t, document.getElementById('sheet'));
+      } catch (err) {
+        console.warn('[race] could not show the track', err?.message);
+      }
+    },
+    onPreviewEnd: () => {
+      if (!session) layer?.remove();
+    },
     onWorldRace: (w) => race(adopt(w)),
     onWorldDemo: (w) => race(adopt(w), { demo: true }),
     onRace: (t) => race(t),

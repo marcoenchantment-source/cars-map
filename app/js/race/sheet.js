@@ -7,6 +7,7 @@ import { loadWorldTracks, findTracks } from './worldTracks.js';
 import { renderGroupSection } from './groupSheet.js';
 
 const SHEET_ID = 'race';
+const PREVIEW_ID = 'race-preview';
 
 /**
  * @param {object} ctx
@@ -15,9 +16,7 @@ const SHEET_ID = 'race';
  */
 export function createRaceSheet(ctx, handlers) {
   const { ui, geo, store } = ctx;
-  let selectedId = null;
-  let worldOpenId = null;
-  let worldQuery = '';
+  let worldQuery = ''; // kept so "Back to tracks" returns to the same search
 
   const units = () => store.get().settings.units;
   const km = (m) => geo.formatDistance(m, units()).text;
@@ -36,53 +35,58 @@ export function createRaceSheet(ctx, handlers) {
     return track.bestLap ? `${len} · Best ${formatLap(track.bestLap)}` : `${len} · No laps yet`;
   }
 
-  function trackActions(track, rerender, body) {
-    return ui.el(
-      'div',
-      { class: 'race-track-actions' },
-      ui.el('button', { type: 'button', class: 'btn btn-go', on: { click: () => handlers.onRace(track) } }, ui.icon('flag', { size: 22 }), 'Race'),
-      ui.el('button', { type: 'button', class: 'btn btn-ghost', on: { click: () => handlers.onDemo(track) } }, ui.icon('play', { size: 18 }), 'Demo lap'),
-      ui.el('button', { type: 'button', class: 'btn btn-ghost', on: { click: () => renderHistory(body, track) } }, ui.icon('timer', { size: 18 }), 'Lap history'),
-      twoTapButton(ui, {
-        text: 'Delete', armedText: 'Tap again to delete', className: 'btn btn-ghost race-delete', label: `Delete ${track.name}`,
-        onConfirm: () => {
-          handlers.onDelete(track.id);
-          selectedId = null;
-          rerender();
-        },
-      }),
-    );
+  /**
+   * Small card for one track while the map zooms to it: Race, Demo lap, and for your own
+   * tracks Lap history and Delete. "Back to tracks" returns to the list (search kept).
+   */
+  function openPreview(track, { saved }) {
+    const facts = [saved ? null : track.country, `${km(track.length)} lap`, track.bestLap ? `Best ${formatLap(track.bestLap)}` : null].filter(Boolean).join(' · ');
+    const back = () => open();
+    const render = (body) => {
+      ui.clear(body);
+      body.append(
+        ui.el('p', { class: 'race-preview-facts num', text: facts }),
+        ui.el(
+          'div',
+          { class: 'race-track-actions' },
+          ui.el('button', { type: 'button', class: 'btn btn-go', on: { click: () => (saved ? handlers.onRace(track) : handlers.onWorldRace(track)) } }, ui.icon('flag', { size: 22 }), 'Race'),
+          ui.el('button', { type: 'button', class: 'btn btn-ghost', on: { click: () => (saved ? handlers.onDemo(track) : handlers.onWorldDemo(track)) } }, ui.icon('play', { size: 18 }), 'Demo lap'),
+          saved ? ui.el('button', { type: 'button', class: 'btn btn-ghost', on: { click: () => renderHistory(body, track, () => render(body)) } }, ui.icon('timer', { size: 18 }), 'Lap history') : null,
+          saved
+            ? twoTapButton(ui, {
+              text: 'Delete', armedText: 'Tap again to delete', className: 'btn btn-ghost race-delete', label: `Delete ${track.name}`,
+              onConfirm: () => {
+                handlers.onDelete(track.id);
+                back();
+              },
+            })
+            : null,
+        ),
+        ui.el('button', { type: 'button', class: 'btn btn-ghost btn-block', on: { click: back } }, ui.icon('back', { size: 18 }), 'Back to tracks'),
+      );
+    };
+    ui.sheet.open({ id: PREVIEW_ID, title: track.name, size: 'auto', render, onClose: () => handlers.onPreviewEnd?.() });
+    // Zoom once the card has slid up, so the track fits the space above it.
+    setTimeout(() => handlers.onPreview?.(track), 300);
   }
 
-  function trackRow(track, rerender, body) {
-    const selected = track.id === selectedId;
+  function trackRow(track) {
     return ui.el(
       'div',
-      { class: `race-track${selected ? ' is-selected' : ''}` },
+      { class: 'race-track' },
       ui.el(
         'button',
-        {
-          type: 'button', class: 'row', 'aria-expanded': String(selected),
-          on: {
-            click: () => {
-              selectedId = selected ? null : track.id;
-              rerender();
-            },
-          },
-        },
+        { type: 'button', class: 'row', on: { click: () => openPreview(track, { saved: true }) } },
         ui.el('span', { class: 'row-icon' }, ui.icon('flag', { size: 20 })),
         ui.el('span', { class: 'row-text' }, ui.el('span', { class: 'row-title', text: track.name }), ui.el('span', { class: 'row-hint num', text: trackHint(track) })),
         ui.icon('chevron', { size: 18 }),
       ),
-      selected ? trackActions(track, rerender, body) : null,
     );
   }
 
   function renderList(body) {
     ui.clear(body);
-    const rerender = () => renderList(body);
     const tracks = handlers.tracks();
-    if (selectedId && !tracks.some((t) => t.id === selectedId)) selectedId = tracks[0]?.id ?? null;
     body.append(safety());
     const group = handlers.group?.();
     if (group) {
@@ -91,7 +95,7 @@ export function createRaceSheet(ctx, handlers) {
       renderGroupSection(box, group, ctx);
     }
     if (tracks.length) {
-      body.append(ui.el('p', { class: 'section-title', text: 'Your tracks' }), ui.el('div', { class: 'list' }, tracks.map((t) => trackRow(t, rerender, body))));
+      body.append(ui.el('p', { class: 'section-title', text: 'Your tracks' }), ui.el('div', { class: 'list' }, tracks.map((t) => trackRow(t))));
     } else {
       body.append(
         ui.el(
@@ -112,29 +116,20 @@ export function createRaceSheet(ctx, handlers) {
 
   // ---------------------------------------------------------------- tracks (built from OpenStreetMap)
 
-  function worldRow(t, redraw) {
-    const open = t.id === worldOpenId;
+  function worldRow(t) {
     const away = t.distance != null ? ` · ${km(t.distance)} away` : '';
     return ui.el(
       'div',
-      { class: `race-track${open ? ' is-selected' : ''}` },
+      { class: 'race-track' },
       ui.el(
         'button',
-        { type: 'button', class: 'row', 'aria-expanded': String(open), on: { click: () => { worldOpenId = open ? null : t.id; redraw(); } } },
+        { type: 'button', class: 'row', on: { click: () => openPreview(t, { saved: false }) } },
         ui.el('span', { class: 'row-icon' }, ui.icon('flag', { size: 20 })),
         ui.el('span', { class: 'row-text' },
           ui.el('span', { class: 'row-title', text: t.name }),
           ui.el('span', { class: 'row-hint num', text: `${t.country} · ${km(t.length)} lap${away}` })),
         ui.icon('chevron', { size: 18 }),
       ),
-      open
-        ? ui.el(
-          'div',
-          { class: 'race-track-actions' },
-          ui.el('button', { type: 'button', class: 'btn btn-go', on: { click: () => handlers.onWorldRace(t) } }, ui.icon('flag', { size: 22 }), 'Race'),
-          ui.el('button', { type: 'button', class: 'btn btn-ghost', on: { click: () => handlers.onWorldDemo(t) } }, ui.icon('play', { size: 18 }), 'Demo lap'),
-        )
-        : null,
     );
   }
 
@@ -158,7 +153,7 @@ export function createRaceSheet(ctx, handlers) {
         results.append(ui.el('p', { class: 'muted small race-world-empty', text: 'That track isn’t in the list yet. Try another name or the country, or record it yourself below.' }));
         return;
       }
-      for (const t of list) results.append(worldRow(t, draw));
+      for (const t of list) results.append(worldRow(t));
     };
     input.addEventListener('input', () => {
       worldQuery = input.value;
@@ -179,13 +174,13 @@ export function createRaceSheet(ctx, handlers) {
 
   // ---------------------------------------------------------------- lap history
 
-  function renderHistory(body, track) {
+  function renderHistory(body, track, onBack = () => renderList(body)) {
     ui.clear(body);
     const saved = handlers.tracks().find((t) => t.id === track.id) ?? track;
     const s = lapStats(saved);
     const stat = (label, value) => ui.el('div', { class: 'race-stat' }, ui.el('span', { class: 'race-stat-value num', text: value }), ui.el('span', { class: 'race-stat-label', text: label }));
     body.append(
-      ui.el('button', { type: 'button', class: 'btn btn-ghost btn-sm', on: { click: () => renderList(body) } }, ui.icon('back', { size: 18 }), 'Track day'),
+      ui.el('button', { type: 'button', class: 'btn btn-ghost btn-sm', on: { click: onBack } }, ui.icon('back', { size: 18 }), 'Back'),
       ui.el('h3', { class: 'race-history-title', text: saved.name }),
       ui.el('div', { class: 'race-stats' },
         stat('Best lap', s.best ? formatLap(s.best) : '–'),
@@ -232,5 +227,5 @@ export function createRaceSheet(ctx, handlers) {
     ui.sheet.open({ id: SHEET_ID, title: 'Track day', size: 'tall', render: (body) => renderList(body) });
   }
 
-  return Object.freeze({ open, select: (id) => (selectedId = id) });
+  return Object.freeze({ open });
 }
