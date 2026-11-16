@@ -39,6 +39,7 @@ export function createCamera(map, { store, bus }) {
   let lastPoseAt = 0;
   let raf = 0;
   let resumeTimer = null;
+  let held = false; // route overview: the user is looking around on purpose, don't snap back
   let navZoom = null;
   const frameListeners = new Set();
 
@@ -114,9 +115,9 @@ export function createCamera(map, { store, bus }) {
     if (!e.originalEvent) return;
     if (store.get().follow) store.set({ follow: false });
     clearTimeout(resumeTimer);
-    if (store.get().mode === 'navigate') {
+    if (store.get().mode === 'navigate' && !held) {
       resumeTimer = setTimeout(() => {
-        if (store.get().mode === 'navigate') store.set({ follow: true });
+        if (store.get().mode === 'navigate' && !held) store.set({ follow: true });
       }, AUTO_RESUME_MS);
     }
   };
@@ -175,7 +176,13 @@ export function createCamera(map, { store, bus }) {
     },
     /** Latest displayed pose or null. */
     pose: () => displayed,
+    /** Keep the camera where the user put it (route overview) until released. */
+    hold(on) {
+      held = on === true;
+      if (held) clearTimeout(resumeTimer);
+    },
     recenter() {
+      held = false;
       clearTimeout(resumeTimer);
       store.set({ follow: true });
       applyFrame(true, { zoomBack: true });

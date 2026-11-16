@@ -4,6 +4,7 @@ import { buildStyle, applyTheme, setBuildings3d } from './style.js';
 import { createCamera } from './camera.js';
 import { createRouteLayer } from './routeLayer.js';
 import { initMapOptions } from './mapOptions.js';
+import { installGrid } from './gridPattern.js';
 
 const LONG_PRESS_MS = 550;
 
@@ -47,6 +48,7 @@ export function createMapView(container, { store, bus, ui, config }) {
   map.on('load', () => resolveReady(map));
   map.on('error', (e) => console.warn('[map]', e?.error?.message ?? e));
 
+  installGrid(map);
   const camera = createCamera(map, { store, bus });
   const routes = createRouteLayer(map, { bus });
   ready.then(() => routes.install());

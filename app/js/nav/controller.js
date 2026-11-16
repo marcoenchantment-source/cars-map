@@ -134,9 +134,10 @@ export function createController(ctx, { voice, wake, internal }) {
     // The camera glides to each new pose over ~1 s; start the line one second back so it always
     // begins under the displayed car instead of jumping ahead of it.
     const lag = Math.min(TRIM_LAG_MAX_M, (progress.speed || 0) * 1.2);
-    const coords = geo.sliceAlong(s.route.geometry, s.route.cum, Math.max(0, progress.along - lag));
+    const from = Math.max(0, progress.along - lag);
+    const coords = geo.sliceAlong(s.route.geometry, s.route.cum, from);
     draw(() => {
-      if (session === s) mapView.routes.setRemaining(coords);
+      if (session === s) mapView.routes.setRemaining(coords, { route: s.route, along: from });
     });
   }
 

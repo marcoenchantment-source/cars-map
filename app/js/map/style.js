@@ -1,26 +1,38 @@
 // Cars Map basemap: a hand-built MapLibre style over OpenFreeMap's OpenMapTiles vector tiles.
+// The look is "the Grid". At night: a near-black floor ruled with a faint violet grid, roads as
+// dark lanes with glowing violet edges (orange for motorways) and glowing shorelines. By day:
+// the same layout in high-contrast colours that stay readable in direct sun.
 // Paint values can be functions of the palette, so the day/night switch repaints in place
 // (applyTheme) without reloading the style or losing custom layers.
 import { ENDPOINTS } from '../config.js';
 
 export const PALETTES = Object.freeze({
+  // Day, built for sunlight: darker road edges and labels than a typical light map so
+  // roads don't wash out against the land on a bright screen.
   light: {
-    land: '#f1ecf8', landuse: '#e9e2f3', park: '#d3ebcf', wood: '#c4e2bd', sand: '#f3ead2',
-    water: '#b9d7f4', waterLine: '#a3c9ef',
-    building: '#e2daef', buildingTop: '#d3c8e6', buildingFlat: '#e4dcf0',
-    road: '#ffffff', roadMajor: '#ffffff', motorway: '#ffe1bd', casing: '#d6cfe3', casingMajor: '#c9bfdc', casingMotorway: '#f0b07a',
-    path: '#c9bfdc', rail: '#bfb5d3', aeroway: '#e2dbee', boundary: '#b4a7d1',
-    label: '#4b4663', labelStrong: '#24212e', labelRoad: '#5d5872', halo: '#f7f4fc', waterLabel: '#4f7fb3',
-    sky: '#b9a8f0', horizon: '#f1ecf8', fog: '#efe9f8',
+    land: '#eceaf2', landuse: '#e3e0ec', park: '#cbe6c3', wood: '#bcdfb2', sand: '#f0e4c4',
+    water: '#98c6f0', waterLine: '#7db1e4', waterEdge: '#6a9fd6', waterEdgeOpacity: 0.7,
+    gridImage: 'cm-grid-light', grid: '#7b4dff', gridAlpha: 0.3,
+    building: '#d8d2e5', buildingTop: '#bfb4d8', buildingFlat: '#dad4e7', buildingEdge: '#b3a8cc',
+    road: '#ffffff', roadMajor: '#ffffff', motorway: '#ffc587', roadMajorLow: '#ffffff', motorwayLow: '#ffb061',
+    casing: '#9a90b3', casingMajor: '#7d7199', casingMotorway: '#d06a12',
+    glowMajor: '#7b4dff', glowMotorway: '#ff8a00', glowOpacity: 0,
+    path: '#a69cc0', rail: '#a097ba', aeroway: '#dbd5e8', boundary: '#9284bb',
+    label: '#2e2a3f', labelStrong: '#14121b', labelRoad: '#3a354f', halo: '#ffffff', waterLabel: '#285d97',
+    sky: '#9cc3f2', horizon: '#e6e2f2', fog: '#eceaf2',
   },
+  // Night: the Grid.
   dark: {
-    land: '#24212e', landuse: '#282534', park: '#21352a', wood: '#1e3124', sand: '#36302a',
-    water: '#18304a', waterLine: '#1f3d5c',
-    building: '#2c2838', buildingTop: '#3b3549', buildingFlat: '#2e2a39',
-    road: '#4b4660', roadMajor: '#5d5677', motorway: '#a0662f', casing: '#16141c', casingMajor: '#16141c', casingMotorway: '#2a1d12',
-    path: '#4a4558', rail: '#4d475c', aeroway: '#302c3b', boundary: '#5d5374',
-    label: '#bdb6d2', labelStrong: '#efebf7', labelRoad: '#a59fbb', halo: '#1d1b24', waterLabel: '#7fa8d4',
-    sky: '#0b0912', horizon: '#2c2443', fog: '#25222f',
+    land: '#07060d', landuse: '#0b0915', park: '#08130f', wood: '#07120d', sand: '#15110b',
+    water: '#030812', waterLine: '#123a5e', waterEdge: '#2a7fc9', waterEdgeOpacity: 0.6,
+    gridImage: 'cm-grid-dark', grid: '#8b63ff', gridAlpha: 0.85,
+    building: '#0b0915', buildingTop: '#1c1540', buildingFlat: '#0f0c1c', buildingEdge: '#4b37a8',
+    road: '#110e1d', roadMajor: '#151129', motorway: '#1c1109', roadMajorLow: '#7d5cf0', motorwayLow: '#ff8a00',
+    casing: '#6650dd', casingMajor: '#8a66ff', casingMotorway: '#ff8a00',
+    glowMajor: '#7b4dff', glowMotorway: '#ff7a00', glowOpacity: 0.3,
+    path: '#3b2f7a', rail: '#3a3366', aeroway: '#151127', boundary: '#5d4aa8',
+    label: '#c6bdf0', labelStrong: '#f4f0ff', labelRoad: '#aa9fe4', halo: '#05040a', waterLabel: '#5ea6e6',
+    sky: '#04030a', horizon: '#3b1a66', fog: '#0c0918',
   },
 });
 
@@ -35,6 +47,8 @@ const zw = (...stops) => ['interpolate', ['exponential', 1.5], ['zoom'], ...stop
 const cls = (...names) => ['match', ['get', 'class'], names, true, false];
 const notTunnel = ['!=', ['get', 'brunnel'], 'tunnel'];
 const isTunnel = ['==', ['get', 'brunnel'], 'tunnel'];
+/** Colour that fades from `low` (zoomed out, thin lines) to `high` (zoomed in, wide lanes). */
+const byZoom = (low, high) => ['interpolate', ['linear'], ['zoom'], 11.5, low, 14, high];
 
 // Width stops per road class: [zoom, px, zoom, px, ...]
 const STOPS = {
@@ -46,32 +60,44 @@ const STOPS = {
 };
 const W = Object.fromEntries(Object.entries(STOPS).map(([k, s]) => [k, zw(...s)]));
 
-/** Casing = fill width plus an outline that grows from 0.8 px (z10) to 2.6 px (z16+).
- *  Built as its own stop list: MapLibre allows only one zoom curve per expression. */
+/** Casing = fill width plus an outline that grows from 0.8 px (z10) to 2.6 px (z16+). */
 const casingExtra = (z) => 0.8 + Math.max(0, Math.min(1, (z - 10) / 6)) * 1.8;
-const casingOf = (w) => {
-  const stops = STOPS[Object.keys(W).find((k) => W[k] === w)];
+
+/** A new width curve from a class's stops: f(zoom, fillWidth) → px. MapLibre allows only one
+ *  zoom curve per expression, so derived widths get their own stop lists. */
+const derived = (key, f) => {
+  const stops = STOPS[key];
   const out = [];
-  for (let i = 0; i < stops.length; i += 2) out.push(stops[i], +(stops[i + 1] + casingExtra(stops[i])).toFixed(2));
+  for (let i = 0; i < stops.length; i += 2) out.push(stops[i], +f(stops[i], stops[i + 1]).toFixed(2));
   return zw(...out);
 };
+const casingW = (key) => derived(key, (z, w) => w + casingExtra(z));
+const glowW = (key) => derived(key, (z, w) => (w + casingExtra(z)) * 1.9 + 3);
+const glowBlur = (key) => derived(key, (z, w) => ((w + casingExtra(z)) * 1.9 + 3) * 0.45);
 
 /**
  * Layer list. A paint value that is a function receives the palette.
  * The route layers are inserted before ROUTE_BEFORE_ID (above buildings, below labels).
  */
 function layerDefs(opts) {
-  const roadCasing = (id, classes, width, colorKey, minzoom = 0, extraFilter = notTunnel) => ({
+  const roadCasing = (id, classes, key, colorKey, minzoom = 0) => ({
     id, type: 'line', source: SRC, 'source-layer': 'transportation', minzoom,
-    filter: ['all', cls(...classes), extraFilter],
+    filter: ['all', cls(...classes), notTunnel],
     layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': (p) => p[colorKey], 'line-width': casingOf(width) },
+    paint: { 'line-color': (p) => p[colorKey], 'line-width': casingW(key) },
   });
-  const roadFill = (id, classes, width, colorKey, minzoom = 0, extraFilter = notTunnel) => ({
+  const roadFill = (id, classes, key, color, minzoom = 0) => ({
     id, type: 'line', source: SRC, 'source-layer': 'transportation', minzoom,
-    filter: ['all', cls(...classes), extraFilter],
+    filter: ['all', cls(...classes), notTunnel],
     layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': (p) => p[colorKey], 'line-width': width },
+    paint: { 'line-color': color, 'line-width': W[key] },
+  });
+  // Night only (opacity 0 by day): a soft blurred halo under the bigger roads.
+  const roadGlow = (id, classes, key, colorKey, minzoom) => ({
+    id, type: 'line', source: SRC, 'source-layer': 'transportation', minzoom,
+    filter: ['all', cls(...classes), notTunnel],
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': (p) => p[colorKey], 'line-width': glowW(key), 'line-blur': glowBlur(key), 'line-opacity': (p) => p.glowOpacity },
   });
 
   return [
@@ -102,7 +128,14 @@ function layerDefs(opts) {
       filter: cls('pitch', 'stadium', 'playground', 'cemetery', 'golf_course', 'park', 'recreation_ground'),
       paint: { 'fill-color': (p) => p.park, 'fill-opacity': 0.8 },
     },
+    // The Grid floor: a tiling pattern (map/gridPattern.js) over the land, under the water.
+    { id: 'grid', type: 'background', paint: { 'background-pattern': (p) => p.gridImage } },
     { id: 'water', type: 'fill', source: SRC, 'source-layer': 'water', paint: { 'fill-color': (p) => p.water } },
+    {
+      id: 'water-edge', type: 'line', source: SRC, 'source-layer': 'water', minzoom: 8,
+      layout: { 'line-join': 'round' },
+      paint: { 'line-color': (p) => p.waterEdge, 'line-opacity': (p) => p.waterEdgeOpacity, 'line-width': zw(8, 0.6, 14, 1.4, 18, 2.6), 'line-blur': 0.6 },
+    },
     {
       id: 'waterway', type: 'line', source: SRC, 'source-layer': 'waterway', minzoom: 8,
       paint: { 'line-color': (p) => p.waterLine, 'line-width': zw(8, 0.5, 14, 2, 18, 6) },
@@ -122,16 +155,18 @@ function layerDefs(opts) {
       id: 'road-path', type: 'line', source: SRC, 'source-layer': 'transportation', minzoom: 15, filter: cls('path', 'track'),
       paint: { 'line-color': (p) => p.path, 'line-width': zw(15, 1, 18, 2.5), 'line-dasharray': [1.5, 1.5] },
     },
-    roadCasing('road-service-casing', ['service'], W.service, 'casing', 14),
-    roadCasing('road-minor-casing', ['minor'], W.minor, 'casing', 12.5),
-    roadCasing('road-secondary-casing', ['secondary', 'tertiary'], W.secondary, 'casingMajor', 9),
-    roadCasing('road-primary-casing', ['primary', 'trunk'], W.primary, 'casingMajor', 7),
-    roadCasing('road-motorway-casing', ['motorway'], W.motorway, 'casingMotorway', 5),
-    roadFill('road-service', ['service'], W.service, 'road', 14),
-    roadFill('road-minor', ['minor'], W.minor, 'road', 12.5),
-    roadFill('road-secondary', ['secondary', 'tertiary'], W.secondary, 'roadMajor', 9),
-    roadFill('road-primary', ['primary', 'trunk'], W.primary, 'roadMajor', 7),
-    roadFill('road-motorway', ['motorway'], W.motorway, 'motorway', 5),
+    roadGlow('glow-major', ['primary', 'trunk', 'secondary', 'tertiary'], 'primary', 'glowMajor', 9),
+    roadGlow('glow-motorway', ['motorway'], 'motorway', 'glowMotorway', 6),
+    roadCasing('road-service-casing', ['service'], 'service', 'casing', 14),
+    roadCasing('road-minor-casing', ['minor'], 'minor', 'casing', 12.5),
+    roadCasing('road-secondary-casing', ['secondary', 'tertiary'], 'secondary', 'casingMajor', 9),
+    roadCasing('road-primary-casing', ['primary', 'trunk'], 'primary', 'casingMajor', 7),
+    roadCasing('road-motorway-casing', ['motorway'], 'motorway', 'casingMotorway', 5),
+    roadFill('road-service', ['service'], 'service', (p) => p.road, 14),
+    roadFill('road-minor', ['minor'], 'minor', (p) => p.road, 12.5),
+    roadFill('road-secondary', ['secondary', 'tertiary'], 'secondary', (p) => byZoom(p.roadMajorLow, p.roadMajor), 9),
+    roadFill('road-primary', ['primary', 'trunk'], 'primary', (p) => byZoom(p.roadMajorLow, p.roadMajor), 7),
+    roadFill('road-motorway', ['motorway'], 'motorway', (p) => byZoom(p.motorwayLow, p.motorway), 5),
     {
       id: 'rail', type: 'line', source: SRC, 'source-layer': 'transportation', minzoom: 11, filter: cls('rail', 'transit'),
       paint: { 'line-color': (p) => p.rail, 'line-width': zw(11, 0.6, 16, 2), 'line-dasharray': [3, 2] },
@@ -153,7 +188,7 @@ function layerDefs(opts) {
         }
       : {
           id: 'building', type: 'fill', source: SRC, 'source-layer': 'building', minzoom: 14,
-          paint: { 'fill-color': (p) => p.buildingFlat, 'fill-opacity': 0.9 },
+          paint: { 'fill-color': (p) => p.buildingFlat, 'fill-outline-color': (p) => p.buildingEdge, 'fill-opacity': 0.9 },
         },
     // ---- labels (route layers go before this one) ----
     {
@@ -188,7 +223,7 @@ function layerDefs(opts) {
       id: 'label-place-major', type: 'symbol', source: SRC, 'source-layer': 'place', maxzoom: 15,
       filter: cls('city', 'town'),
       layout: {
-        'text-field': NAME, 'text-font': FONT_BOLD,
+        'text-field': NAME, 'text-font': FONT_BOLD, 'text-transform': 'uppercase', 'text-letter-spacing': 0.06,
         'text-size': ['interpolate', ['linear'], ['zoom'], 4, ['match', ['get', 'class'], 'city', 13, 11], 12, ['match', ['get', 'class'], 'city', 22, 17]],
         'text-max-width': 8,
       },
@@ -203,6 +238,8 @@ function layerDefs(opts) {
 }
 
 export const ROUTE_BEFORE_ID = 'label-road';
+/** Night glow under the big roads; zeroed while satellite imagery shows. */
+export const GLOW_LAYERS = Object.freeze(['glow-major', 'glow-motorway']);
 
 function resolvePaint(paint, palette) {
   const out = {};
@@ -216,7 +253,7 @@ export function skyFor(theme) {
     'sky-color': p.sky,
     'horizon-color': p.horizon,
     'fog-color': p.fog,
-    'sky-horizon-blend': 0.6,
+    'sky-horizon-blend': 0.55,
     'horizon-fog-blend': 0.7,
     'fog-ground-blend': 0.85,
     'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 6, 0.6, 10, 0],
@@ -251,7 +288,10 @@ export function buildStyle(theme, opts = {}) {
 /** Repaint the basemap for a theme in place. */
 export function applyTheme(map, theme, opts = {}) {
   const palette = PALETTES[theme] ?? PALETTES.light;
-  for (const d of layerDefs({ buildings3d: opts.buildings3d !== false })) {
+  // Match the building layer actually on the map (flat or 3D), whatever the setting says.
+  const buildingType = map.getLayer('building')?.type;
+  const buildings3d = buildingType ? buildingType === 'fill-extrusion' : opts.buildings3d !== false;
+  for (const d of layerDefs({ buildings3d })) {
     if (!map.getLayer(d.id)) continue;
     for (const [prop, v] of Object.entries(d.paint ?? {})) {
       if (typeof v === 'function') map.setPaintProperty(d.id, prop, v(palette));
@@ -270,8 +310,21 @@ export function setBuildings3d(map, theme, on) {
 }
 
 function firstLabelAfterBuilding(map) {
-  // Re-insert below any route layers so the route stays drawn above buildings.
+  // Straight after the roads (boundary is the last road-level layer), so buildings stay above
+  // satellite/terrain and below the radar, route and labels.
   const order = map.getStyle().layers.map((l) => l.id);
-  const routeIdx = order.findIndex((id) => id.startsWith('route-') || id.startsWith('cm-'));
-  return routeIdx >= 0 ? order[routeIdx] : ROUTE_BEFORE_ID;
+  const i = order.indexOf('boundary');
+  return i >= 0 && order[i + 1] ? order[i + 1] : ROUTE_BEFORE_ID;
+}
+
+/**
+ * The layer overlays (radar, route, trails) go before: the first layer above the buildings,
+ * skipping layers whose id starts with `skipPrefix` (the caller's own, being replaced).
+ */
+export function overlayBeforeId(map, skipPrefix = null) {
+  const order = map.getStyle()?.layers?.map((l) => l.id) ?? [];
+  const i = order.indexOf('building');
+  const next = i >= 0 ? order.slice(i + 1).find((id) => !skipPrefix || !id.startsWith(skipPrefix)) : null;
+  if (next) return next;
+  return map.getLayer(ROUTE_BEFORE_ID) ? ROUTE_BEFORE_ID : undefined;
 }

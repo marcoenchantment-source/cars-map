@@ -3,7 +3,7 @@
 import { solarElevation, dayOrNight } from '../core/sun.js';
 
 const CHECK_EVERY_MS = 60_000;
-const THEME_COLORS = { light: '#1d1b24', dark: '#1d1b24' };
+const THEME_COLORS = { light: '#1d1b24', dark: '#07060d' };
 
 function systemTheme() {
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

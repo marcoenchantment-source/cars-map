@@ -1,5 +1,6 @@
 // Weather view: animated rain radar (RainViewer, last hour) over the map, plus a live conditions
 // card (Open-Meteo) for the place you're looking at. Tap anywhere on the map to check there.
+import { overlayBeforeId } from './style.js';
 import { describeWeather, windFrom, parseForecast, parseRadarIndex, isSevere } from './weatherCodes.js';
 
 const RADAR_PREFIX = 'cm-radar-';
@@ -94,7 +95,7 @@ export function initWeather(ctx) {
       if (!parsed || !active()) return;
       clearRadar();
       radar = parsed;
-      const beforeId = map.getLayer('label-road') ? 'label-road' : undefined;
+      const beforeId = overlayBeforeId(map, RADAR_PREFIX);
       radar.frames.forEach((f, k) => {
         const id = `${RADAR_PREFIX}${k}`;
         map.addSource(id, {
@@ -209,14 +210,22 @@ export function initWeather(ctx) {
   mapView.ready.then(() => {
     sync();
     store.select((s) => s.settings.mapWeather, () => setTimeout(sync, 0));
-    // Theme/building changes re-add basemap layers; put the radar back on top of them.
-    store.select((s) => `${s.theme}|${s.settings.buildings3d}`, () => active() && setTimeout(loadRadar, 50));
+    // Re-centre or start driving: drop the tapped pin and follow the car again.
+    store.select((s) => s.follow || s.mode === 'navigate', (following) => {
+      if (!following || !pin || !active()) return;
+      pin.remove();
+      pin = null;
+      checkWeather(centre(), { force: true });
+    });
   });
   let moveTimer = null;
+  // Throttled, not debounced: while driving the camera moves every frame and never settles.
   map.on('moveend', () => {
-    if (!active() || pin) return;
-    clearTimeout(moveTimer);
-    moveTimer = setTimeout(() => checkWeather(centre()), 700);
+    if (!active() || pin || moveTimer) return;
+    moveTimer = setTimeout(() => {
+      moveTimer = null;
+      checkWeather(centre());
+    }, 700);
   });
   map.on('click', (e) => {
     if (!active() || store.get().mode === 'navigate') return;

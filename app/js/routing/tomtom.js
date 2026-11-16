@@ -84,10 +84,14 @@ function instructionDraft(ins, next, geometry, cum) {
   return draft;
 }
 
-function congestionOf(sections, geometry) {
+function congestionOf(sections, geometry, cum) {
   return sections
     .filter((s) => s?.sectionType === 'TRAFFIC' && Number.isInteger(s.startPointIndex) && Number.isInteger(s.endPointIndex))
-    .map((s) => ({ coords: geometry.slice(Math.max(0, s.startPointIndex), Math.min(geometry.length, s.endPointIndex + 1)), level: trafficLevel(s) }))
+    .map((s) => {
+      const a = Math.max(0, s.startPointIndex);
+      const b = Math.min(geometry.length - 1, s.endPointIndex);
+      return { coords: geometry.slice(a, b + 1), level: trafficLevel(s), from: cum[a] ?? 0, to: cum[b] ?? 0 };
+    })
     .filter((c) => c.coords.length > 1);
 }
 
@@ -109,7 +113,7 @@ function parseRoute(r, { options, destinationName }) {
     trafficDelay: Number(s.trafficDelayInSeconds),
     drafts,
     hasTolls,
-    congestion: congestionOf(sections, geometry),
+    congestion: congestionOf(sections, geometry, cum),
     options: { avoidTolls: !!options?.avoidTolls && !hasTolls, avoidMotorways: !!options?.avoidMotorways, avoidFerries: !!options?.avoidFerries },
     destinationName,
   });

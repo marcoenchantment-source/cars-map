@@ -1,5 +1,6 @@
 // Route drawing: the "flame ribbon". The chosen route glows violet near the car and burns to
 // flame orange at the destination; alternatives sit underneath in muted lavender.
+import { sliceAlong } from '../core/geo.js';
 import { ROUTE_BEFORE_ID } from './style.js';
 
 const EMPTY = { type: 'FeatureCollection', features: [] };
@@ -10,6 +11,24 @@ const TRAFFIC_COLORS = { slow: '#f9a825', heavy: '#e53935', closed: '#7a1414' };
 
 function lineFeature(coords, props = {}) {
   return { type: 'Feature', properties: props, geometry: { type: 'LineString', coordinates: coords } };
+}
+
+/**
+ * Traffic colours for a route as GeoJSON; with `along` (metres driven), only the part still
+ * ahead of the car, so slow/heavy stretches don't linger behind it.
+ */
+export function trafficFeatures(route, along = 0) {
+  const segs = Array.isArray(route?.congestion) ? route.congestion : [];
+  const canTrim = along > 0 && Array.isArray(route?.cum) && route.geometry?.length > 1;
+  const features = segs
+    .filter((s) => s.coords?.length > 1 && s.level !== 'free')
+    .filter((s) => !canTrim || !Number.isFinite(s.to) || s.to > along)
+    .map((s) => {
+      const partly = canTrim && Number.isFinite(s.from) && s.from < along;
+      return lineFeature(partly ? sliceAlong(route.geometry, route.cum, along, s.to) : s.coords, { level: s.level });
+    })
+    .filter((f) => f.geometry.coordinates.length > 1);
+  return { type: 'FeatureCollection', features };
 }
 
 export function createRouteLayer(map, { bus }) {
@@ -104,19 +123,17 @@ export function createRouteLayer(map, { bus }) {
     map.getSource('cm-route')?.setData(coords && coords.length > 1 ? lineFeature(coords) : EMPTY);
   }
 
-  function setTraffic(route) {
-    const segs = route?.congestion ?? [];
-    const features = segs
-      .filter((s) => s.coords?.length > 1 && s.level !== 'free')
-      .map((s) => lineFeature(s.coords, { level: s.level }));
-    map.getSource('cm-route-traffic')?.setData({ type: 'FeatureCollection', features });
+  function setTraffic(route, along = 0) {
+    map.getSource('cm-route-traffic')?.setData(trafficFeatures(route, along));
   }
 
+  let generation = 0; // bumped by clear() so a draw waiting for the style can't reappear after it
   /** Run fn now if the layers exist, otherwise once the style has finished loading. */
   function whenReady(fn) {
     if (install()) return fn();
+    const mine = generation;
     map.once('idle', () => {
-      if (install()) fn();
+      if (mine === generation && install()) fn();
     });
   }
 
@@ -142,11 +159,13 @@ export function createRouteLayer(map, { bus }) {
       setMain(route?.geometry);
       setTraffic(route);
     },
-    /** Replace the drawn main line (e.g. the remaining part of the route). */
-    setRemaining(coords) {
+    /** Replace the drawn main line (the part still ahead); traffic is trimmed to match. */
+    setRemaining(coords, { route = null, along = 0 } = {}) {
       setMain(coords);
+      if (route) setTraffic(route, along);
     },
     clear() {
+      generation++;
       stopFlow();
       map.getSource('cm-routes-alt')?.setData(EMPTY);
       map.getSource('cm-route-traffic')?.setData(EMPTY);

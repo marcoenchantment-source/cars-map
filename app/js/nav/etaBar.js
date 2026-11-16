@@ -74,6 +74,7 @@ export function createEtaBar(ctx, { controller, voice }) {
 
   function setOverview(on) {
     overview = on;
+    mapView.camera.hold?.(on);
     overviewBtn.setAttribute('aria-pressed', String(on));
     overviewBtn.setAttribute('aria-label', on ? 'Back to driving view' : 'Show the whole route');
   }

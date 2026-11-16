@@ -7,7 +7,7 @@
   --park: #d3ebcf;
   --ink: #1d1b24;
   --ink-2: #5d5872;
-  --ink-3: #8a84a0;
+  --ink-3: #6f6987;
   --surface: #ffffff;
   --surface-2: #f6f3fb;
   --surface-3: #ece6f6;
@@ -47,10 +47,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --land: #25222f; --water: #1b344f; --park: #243a2a;
+    --land: #07060d; --water: #030812; --park: #08130f;
     --ink: #f2f0f7; --ink-2: #b4adc8; --ink-3: #847d99;
-    --surface: #1d1b24; --surface-2: #262331; --surface-3: #312d3e; --line: #363245;
-    --pill: #34313f; --pill-2: #403c4d; --pill-ink: #ffffff; --pill-ink-2: #c9c3da;
+    --surface: #12101b; --surface-2: #1a1726; --surface-3: #241f34; --line: #2e2845;
+    --pill: #171423; --pill-2: #262038; --pill-ink: #ffffff; --pill-ink-2: #c9c3da;
     --accent: #9b78ff; --accent-strong: #b398ff; --accent-ink: #14111c; --accent-soft: #2d2546;
     --scrim: rgb(0 0 0 / 0.45);
     --shadow: 0 16px 36px -14px rgb(0 0 0 / 0.75), 0 2px 8px rgb(0 0 0 / 0.4);
@@ -59,10 +59,10 @@
   }
 }
 :root[data-theme="dark"] {
-  --land: #25222f; --water: #1b344f; --park: #243a2a;
+  --land: #07060d; --water: #030812; --park: #08130f;
   --ink: #f2f0f7; --ink-2: #b4adc8; --ink-3: #847d99;
-  --surface: #1d1b24; --surface-2: #262331; --surface-3: #312d3e; --line: #363245;
-  --pill: #34313f; --pill-2: #403c4d; --pill-ink: #ffffff; --pill-ink-2: #c9c3da;
+  --surface: #12101b; --surface-2: #1a1726; --surface-3: #241f34; --line: #2e2845;
+  --pill: #171423; --pill-2: #262038; --pill-ink: #ffffff; --pill-ink-2: #c9c3da;
   --accent: #9b78ff; --accent-strong: #b398ff; --accent-ink: #14111c; --accent-soft: #2d2546;
   --scrim: rgb(0 0 0 / 0.45);
   --shadow: 0 16px 36px -14px rgb(0 0 0 / 0.75), 0 2px 8px rgb(0 0 0 / 0.4);
@@ -348,3 +348,19 @@ button.row:hover { background: var(--surface-3); }
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
 .row-toggle.is-disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------------------------------------------------------------- the Grid (night chrome) */
+/* At night the floating controls pick up the map's glowing violet edges. */
+:root[data-theme="dark"] .fab,
+:root[data-theme="dark"] .dock,
+:root[data-theme="dark"] .hud-pill {
+  box-shadow: var(--shadow), 0 0 0 1px rgb(139 99 255 / 0.38), 0 0 22px -8px rgb(123 77 255 / 0.75);
+}
+:root[data-theme="dark"] .fab-accent { box-shadow: var(--shadow), 0 0 0 1px rgb(190 170 255 / 0.5), 0 0 26px -4px rgb(123 77 255 / 0.9); }
+:root[data-theme="dark"] .fab-warn { box-shadow: var(--shadow), 0 0 26px -4px rgb(255 138 0 / 0.85); }
+:root[data-theme="dark"] .fab[data-active="true"] { box-shadow: 0 0 0 3px var(--accent), 0 0 24px -2px rgb(123 77 255 / 0.9), var(--shadow); }
+:root[data-theme="dark"] .sheet { box-shadow: 0 -1px 0 rgb(139 99 255 / 0.5), 0 -18px 46px -14px rgb(123 77 255 / 0.4); }
+:root[data-theme="dark"] .dock-item[aria-current="true"] { text-shadow: 0 0 10px rgb(155 120 255 / 0.9); }
+:root[data-theme="dark"] .dock-item[aria-current="true"] .icon { filter: drop-shadow(0 0 6px rgb(155 120 255 / 0.85)); }
+/* By day, a hairline edge keeps white controls apart from a bright map in the sun. */
+:root[data-theme="light"] .fab:not(.fab-accent):not(.fab-warn) { box-shadow: var(--shadow), 0 0 0 1px rgb(29 27 36 / 0.1); }

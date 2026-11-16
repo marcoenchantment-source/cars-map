@@ -1,6 +1,6 @@
 // Map views: one base (Standard, or Satellite = Esri imagery under our roads and labels) plus
 // add-ons: Terrain (hillshade, Standard only) and Weather (radar + conditions, see weather.js).
-import { applyTheme } from './style.js';
+import { applyTheme, GLOW_LAYERS } from './style.js';
 
 export const MAP_BASES = Object.freeze([
   { value: 'standard', label: 'Standard' },
@@ -25,7 +25,7 @@ const SAT = 'cm-sat';
 const DEM = 'cm-dem';
 const HILL = 'cm-hillshade';
 const BELOW_ROADS = 'road-tunnel';
-const FILL_LAYERS = ['landuse', 'landcover-wood', 'landcover-grass', 'landcover-sand', 'park', 'landuse-green', 'building'];
+const FILL_LAYERS = ['landuse', 'landcover-wood', 'landcover-grass', 'landcover-sand', 'park', 'landuse-green', 'grid', 'water-edge', 'building'];
 const ROAD_LAYER_RE = /^road-(?!tunnel)/; // tunnels keep their own faint opacity
 const LABEL_LAYER_RE = /^label-/;
 
@@ -74,6 +74,8 @@ function styleForSatellite(map, on) {
   for (const id of FILL_LAYERS) {
     if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'none' : 'visible');
   }
+  // Glow off over photos; leaving satellite, applyTheme has already put the theme's value back.
+  if (on) for (const id of GLOW_LAYERS) if (map.getLayer(id)) map.setPaintProperty(id, 'line-opacity', 0);
   for (const { id, type } of map.getStyle().layers) {
     if (ROAD_LAYER_RE.test(id) && type === 'line') map.setPaintProperty(id, 'line-opacity', on ? 0.55 : 1);
     if (LABEL_LAYER_RE.test(id) && type === 'symbol' && on) {
