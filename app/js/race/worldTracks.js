@@ -83,7 +83,7 @@ export function guessStart(loop) {
  * OSM pieces → a track in the app's saved-track format (or null when no usable lap).
  * anyDirection: lap direction unknown unless every piece is one-way.
  */
-export function buildCircuit({ id, name, country = '' }, ways) {
+export function buildCircuit({ id, name, country = '', aka = [] }, ways) {
   const loop = chainLoop(racingWays(ways));
   if (!loop || loop.length < WORLD.minLapM || loop.length > WORLD.maxLapM) return null;
   const line = simplify(loop.coords, WORLD.simplifyM).map(([lng, lat]) => [round6(lng), round6(lat)]);
@@ -91,6 +91,7 @@ export function buildCircuit({ id, name, country = '' }, ways) {
     id: `osm:${id}`,
     name,
     country,
+    aka: aka.filter((a) => typeof a === 'string' && a).slice(0, 6),
     createdAt: 0,
     line,
     start: guessStart(loop.coords),
@@ -110,7 +111,8 @@ const norm = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-
 /** Catalogue tracks matching the text (name or country), nearest first. */
 export function findTracks(tracks, { query = '', near = null, limit = 20 } = {}) {
   const words = norm(query).split(/\s+/).filter(Boolean);
-  const hit = (t) => words.every((w) => norm(`${t.name} ${t.country}`).includes(w));
+  // Matches the name, country or other names the track goes by (e.g. "Barbagallo", "Eastern Creek").
+  const hit = (t) => words.every((w) => norm(`${t.name} ${t.country} ${(t.aka ?? []).join(' ')}`).includes(w));
   const dist = (t) => (near ? haversine(near, t.start.point) : 0);
   return tracks.filter(hit).map((t) => ({ t, d: dist(t) })).sort((a, b) => a.d - b.d).slice(0, limit).map(({ t, d }) => ({ ...t, distance: near ? d : null }));
 }

@@ -67,4 +67,7 @@ test('findTracks filters by name or country and sorts nearest first', () => {
   assert.deepEqual(findTracks(list, { query: 'australia', near: [115.86, -31.95] }).map((t) => t.name), ['Wanneroo Raceway', 'Phillip Island']);
   assert.deepEqual(findTracks(list, { query: 'silver' }).map((t) => t.name), ['Silverstone']);
   assert.equal(findTracks(list, { near: [115.86, -31.95], limit: 1 })[0].name, 'Wanneroo Raceway');
+  const withAka = [{ ...list[1], aka: ['Barbagallo', 'Perth'] }];
+  assert.equal(findTracks(withAka, { query: 'barbagallo' }).length, 1, 'other names match');
+  assert.equal(findTracks(withAka, { query: 'perth raceway' }).length, 1);
 });

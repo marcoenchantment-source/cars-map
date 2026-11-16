@@ -1,5 +1,5 @@
 // Track day sheet: safety note, your tracks (Race / Demo lap / Lap history / Delete), world
-// tracks from OpenStreetMap (search, nearest first), record a new track, and a practice demo.
+// tracks built from OpenStreetMap (search, nearest first), record a new track, and a practice demo.
 import { formatLap, formatDelta } from './laps.js';
 import { twoTapButton } from './panel.js';
 import { lapStats } from './tracksModel.js';
@@ -110,7 +110,7 @@ export function createRaceSheet(ctx, handlers) {
     );
   }
 
-  // ---------------------------------------------------------------- world tracks
+  // ---------------------------------------------------------------- tracks (built from OpenStreetMap)
 
   function worldRow(t, redraw) {
     const open = t.id === worldOpenId;
@@ -140,10 +140,10 @@ export function createRaceSheet(ctx, handlers) {
 
   function worldSection() {
     const results = ui.el('div', { class: 'list race-world' });
-    const note = ui.el('p', { class: 'small muted', text: 'Loading world tracks…' });
+    const note = ui.el('p', { class: 'small muted', text: 'Loading tracks…' });
     const input = ui.el('input', {
       class: 'input', id: 'race-world-q', type: 'search', value: worldQuery,
-      placeholder: 'Search a track or country', autocomplete: 'off', 'aria-label': 'Search world tracks',
+      placeholder: 'Search a track, town or country', autocomplete: 'off', 'aria-label': 'Search tracks',
     });
     let data = null;
     const near = () => {
@@ -155,7 +155,7 @@ export function createRaceSheet(ctx, handlers) {
       if (!data) return;
       const list = findTracks(data.tracks, { query: worldQuery, near: near(), limit: worldQuery ? 20 : 6 });
       if (!list.length) {
-        results.append(ui.el('p', { class: 'muted small race-world-empty', text: 'No tracks match. Try a country name, or record your own track below.' }));
+        results.append(ui.el('p', { class: 'muted small race-world-empty', text: 'That track isn’t in the list yet. Try another name or the country, or record it yourself below.' }));
         return;
       }
       for (const t of list) results.append(worldRow(t, draw));
@@ -168,13 +168,13 @@ export function createRaceSheet(ctx, handlers) {
       .then((d) => {
         data = d;
         const when = d.generatedAt ? new Date(d.generatedAt).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' }) : '';
-        note.textContent = `${d.tracks.length} circuits from OpenStreetMap${when ? `, updated ${when}` : ''}. Nearest first.`;
+        note.textContent = `${d.tracks.length} circuits${when ? `, updated ${when}` : ''}. Nearest first.`;
         draw();
       })
       .catch((err) => {
         note.textContent = err.message;
       });
-    return [ui.el('p', { class: 'section-title', text: 'World tracks' }), input, results, note];
+    return [ui.el('p', { class: 'section-title', text: 'Tracks' }), input, results, note];
   }
 
   // ---------------------------------------------------------------- lap history
